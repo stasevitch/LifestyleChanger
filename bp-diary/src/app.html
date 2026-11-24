@@ -190,6 +190,18 @@ form.reading { display: grid; gap: 14px; }
 .check { display: flex; gap: 10px; align-items: center; font-size: .92rem; }
 .check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .err { color: var(--c-stage2); font-size: .88rem; min-height: 1.2em; margin: 0; }
+.quick-add { display: grid; grid-template-columns: 1.7fr 1fr; gap: 10px; }
+.quick-add .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; font-size: 1.02rem; border-radius: 14px; }
+.quick-add svg { width: 22px; height: 22px; flex: none; }
+.setup { display: grid; gap: 12px; }
+.setup p { margin: 0; }
+.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
+.steps a { color: var(--accent); font-weight: 600; }
+.setup details summary { color: var(--muted); font-size: .88rem; cursor: pointer; }
+.setup details[open] { display: grid; gap: 8px; }
+.setup input { width: 100%; margin-top: 8px; }
+.done-mark { display: grid; place-items: center; gap: 6px; text-align: center; padding: 10px 0; }
+.done-mark b { font-family: var(--font-num); font-size: 1.15rem; }
 .scan-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 1.5px dashed var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 14px; padding: 12px; font-weight: 600; }
 .scan-btn svg { width: 20px; height: 20px; }
 .scan-status { display: flex; gap: 12px; align-items: center; background: var(--surface-2); border-radius: 14px; padding: 10px; }
@@ -304,6 +316,33 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
       <button class="btn danger block" type="button" id="f-delete" hidden>Delete reading</button>
       <p class="tip" id="f-tip">Sit quietly for 5 minutes, feet flat, arm resting at heart level. Take 2 readings 1 minute apart. Both count toward this session's average.</p>
     </form>
+  </div>
+</div>
+
+<!-- Camera scan setup -->
+<div class="overlay" id="setup-overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+    <div class="grab"></div>
+    <div class="sheet-head"><h2 id="setup-title">Turn on camera scan</h2><button class="btn link" type="button" id="setup-close">Close</button></div>
+    <div class="setup" id="setup-steps">
+      <p>Take a photo of your monitor and the numbers fill in by themselves. You always check them before saving.</p>
+      <p class="small muted">Photos are read by Claude, an AI from Anthropic, so the app needs a key from your Anthropic account. Each scan costs about 1 cent of your Anthropic credit. The key stays on this phone.</p>
+      <ol class="steps">
+        <li><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open your Anthropic keys</a> and sign in.</li>
+        <li>Tap <b>Create Key</b>, type any name (for example "BP Diary"), then tap <b>Copy</b>.</li>
+        <li>Come back here and tap <b>Paste key</b>.</li>
+      </ol>
+      <button class="btn primary block" type="button" id="setup-paste">Paste key</button>
+      <details id="setup-manual"><summary>Paste button didn't work?</summary>
+        <input type="password" id="setup-key" placeholder="Long press here and choose Paste" autocomplete="off" spellcheck="false">
+        <button class="btn block" type="button" id="setup-save">Save key</button>
+      </details>
+      <p class="err" id="setup-err" role="alert"></p>
+    </div>
+    <div class="setup" id="setup-done" hidden>
+      <div class="done-mark"><span class="pill cat-normal">On</span><b>Camera scan is ready</b><span class="muted small">Point the camera straight at the monitor's screen.</span></div>
+      <button class="btn primary block" type="button" data-act="scan">Scan monitor now</button>
+    </div>
   </div>
 </div>
 
@@ -586,6 +625,7 @@ function renderToday() {
   $('#view-today').innerHTML = `
     ${exampleBanner()}
     ${severeAlert(todays)}
+    ${inFrame ? '' : `<div class="quick-add"><button class="btn primary" data-act="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg> Scan monitor</button><button class="btn" data-act="add">Type it in</button></div>`}
     <h2 class="sec">${esc(fmtDayHeading(now))}</h2>
     <div class="sessions">${sessionCard('morning', m)}${sessionCard('evening', e)}</div>
     ${x.length ? `<div class="card"><div class="label" style="font-weight:600;margin-bottom:4px">Extra readings</div><div class="extras">${x.map(readingRow).join('')}</div></div>` : ''}
@@ -763,15 +803,11 @@ function renderMore() {
       <div class="item"><label for="s-arm">Usual arm</label><select id="s-arm">${opt('left', 'Left', s.defaultArm)}${opt('right', 'Right', s.defaultArm)}</select></div>
     </div>
 
-    <h2 class="sec">Scan with camera</h2>
-    <div class="card" style="display:grid;gap:10px">
-      <p class="prose" style="margin:0">Take a photo of any blood pressure monitor and the numbers are filled in for you to check. Photos are read by Claude (Anthropic's AI) using your own API key, and are not stored. Each scan costs about one cent.</p>
-      ${scanKey() ? `<p style="margin:0"><span class="pill cat-normal">Camera scan is on</span></p>
-      <div class="btn-row"><button class="btn danger" data-act="remove-key">Remove API key</button></div>`
-      : `<label class="field"><span>Anthropic API key</span><input type="password" id="s-key" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" style="width:100%"></label>
-      <button class="btn primary" data-act="save-key">Save key</button>
-      <p class="small muted" style="margin:0">Create a key at console.anthropic.com. It stays on this phone only.</p>`}
-    </div>
+    ${inFrame ? '' : `<h2 class="sec">Camera scan</h2>
+    <div class="card list"><div class="item">
+      <span class="lbl">${scanKey() ? 'On' : 'Off'}<span class="hint">${scanKey() ? 'Photos are read by Claude, about 1 cent per scan.' : 'Fill in readings from a photo of your monitor.'}</span></span>
+      ${scanKey() ? '<button class="btn danger" data-act="remove-key">Turn off</button>' : '<button class="btn primary" data-act="setup-scan">Set up</button>'}
+    </div></div>`}
 
     <h2 class="sec">Import from your monitor</h2>
     <div class="card" style="display:grid;gap:10px">
@@ -1071,12 +1107,12 @@ function openSheet(opts = {}) {
   $('#f-save-more').hidden = !!r;
   $('#f-tip').hidden = !!r;
   $('#sheet-overlay').hidden = false;
-  if (!r) setTimeout(() => $('#f-sys').focus(), 60);
+  if (!r && !opts.fromScan) setTimeout(() => $('#f-sys').focus(), 60);
 }
 function closeSheet() { $('#sheet-overlay').hidden = true; editing = null; }
 $('#sheet-cancel').addEventListener('click', closeSheet);
 $('#sheet-overlay').addEventListener('click', e => { if (e.target.id === 'sheet-overlay') closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSetup(); closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
 
 function readForm() {
   const sys = parseInt($('#f-sys').value, 10), dia = parseInt($('#f-dia').value, 10);
@@ -1201,7 +1237,7 @@ async function readMonitorPhoto(base64) {
 
 function scanErrorMessage(e, Anthropic) {
   if (Anthropic) {
-    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return 'Your API key was not accepted. Check it under More, Scan with camera.';
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return 'Your Anthropic key was not accepted. Go to More, Camera scan, turn it off, then set it up again with a new key.';
     if (e instanceof Anthropic.RateLimitError) return 'Too many scans in a short time, or your API credit has run out. Try again in a minute, or check your balance at console.anthropic.com.';
     if (e instanceof Anthropic.APIConnectionError) return 'No connection. Scanning needs internet; you can type the numbers instead.';
     if (e instanceof Anthropic.InternalServerError) return 'The reading service is busy. Try again in a moment.';
@@ -1228,18 +1264,43 @@ function resetScan(editingExisting) {
   $('#scan-btn').hidden = !!editingExisting || inFrame;
 }
 
-$('#scan-btn').addEventListener('click', () => {
-  if (!scanKey()) {
-    $('#f-err').textContent = 'To scan, add your Anthropic API key first under More, Scan with camera.';
+function startScan() {
+  if (!scanKey()) { openSetup(); return; }
+  $('#scan-file').click();
+}
+$('#scan-btn').addEventListener('click', startScan);
+
+function openSetup() {
+  $('#setup-steps').hidden = false; $('#setup-done').hidden = true;
+  $('#setup-err').textContent = ''; $('#setup-key').value = ''; $('#setup-manual').open = false;
+  $('#setup-overlay').hidden = false;
+}
+function closeSetup() { $('#setup-overlay').hidden = true; }
+function saveKey(raw) {
+  const k = String(raw || '').trim();
+  if (!/^sk-ant-[A-Za-z0-9_-]{20,}$/.test(k)) {
+    $('#setup-err').textContent = k ? "That doesn't look like an Anthropic key. It starts with sk-ant- and is long. Copy it again and retry." : 'Nothing to paste yet. Copy the key in Anthropic first.';
     return;
   }
-  $('#scan-file').click();
+  try { localStorage.setItem(KEY_STORE, k); } catch (e) { $('#setup-err').textContent = "Couldn't save on this phone. Open BP Diary from the home screen and try again."; return; }
+  $('#setup-steps').hidden = true; $('#setup-done').hidden = false;
+  if (current === 'more') renderMore();
+}
+$('#setup-close').addEventListener('click', closeSetup);
+$('#setup-overlay').addEventListener('click', e => { if (e.target.id === 'setup-overlay') closeSetup(); });
+$('#setup-save').addEventListener('click', () => saveKey($('#setup-key').value));
+$('#setup-paste').addEventListener('click', async () => {
+  $('#setup-err').textContent = '';
+  try { saveKey(await navigator.clipboard.readText()); }
+  catch (e) { $('#setup-manual').open = true; $('#setup-key').focus(); $('#setup-err').textContent = 'Long press the box below and choose Paste.'; }
 });
 
 $('#scan-file').addEventListener('change', async e => {
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
   if (!file) return;
+  closeSetup();
+  if ($('#sheet-overlay').hidden) openSheet({ fromScan: true });
   $('#f-err').textContent = '';
   clearMarks();
   let img;
@@ -1319,16 +1380,12 @@ document.addEventListener('click', e => {
     state.readings = state.readings.filter(r => r.source !== 'example').concat(importPreview.ok);
     importPreview = null; importRows = null; persist(); render(); toast(`Imported ${n} readings`);
   }
-  else if (act === 'save-key') {
-    const k = ($('#s-key').value || '').trim();
-    if (!/^sk-ant-/.test(k)) { toast('That doesn\'t look like an Anthropic API key (it starts with sk-ant-).'); return; }
-    try { localStorage.setItem(KEY_STORE, k); toast('Camera scan is on'); } catch (e) { toast('Could not save the key on this device.'); }
-    renderMore();
-  }
+  else if (act === 'scan') startScan();
+  else if (act === 'setup-scan') openSetup();
   else if (act === 'remove-key') {
-    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to remove'; return; }
+    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to turn off'; return; }
     try { localStorage.removeItem(KEY_STORE); } catch (e) {}
-    toast('API key removed'); renderMore();
+    toast('Camera scan turned off'); renderMore();
   }
   else if (act === 'clear-all') {
     if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to delete everything'; return; }

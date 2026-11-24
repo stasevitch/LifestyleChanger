@@ -27,14 +27,22 @@ srv.listen(8766, async () => {
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(reply({ readable: true, systolic: 128, diastolic: 84, pulse: 66, year: null, month: 11, day: 24, hour: 7, minute: 15, irregular_heartbeat: false, is_memory_or_average: false, uncertain_fields: ['pulse'], device: null, problem: null })) });
   });
   await page.goto('http://localhost:8766/'); await page.waitForTimeout(400);
-  // No key yet: friendly message
-  await page.click('#tab-add'); await page.click('#scan-btn');
-  const noKey = await page.textContent('#f-err'); await page.click('#sheet-cancel');
-  // Save key in settings
-  await page.click('.tab[data-view=more]'); await page.fill('#s-key', 'sk-ant-test-123'); await page.click('[data-act=save-key]');
-  await page.screenshot({ path: `${out}/scan-settings.png` });
-  // Scan
-  await page.click('#tab-add'); await page.setInputFiles('#scan-file', photo);
+  await page.screenshot({ path: `${out}/today.png` });
+  // No key yet: Today's Scan button opens the guided setup
+  await page.click('[data-act=scan]');
+  const setupOpen = await page.isVisible('#setup-overlay');
+  await page.screenshot({ path: `${out}/setup.png` });
+  await page.click('#setup-paste');               // clipboard is empty/denied here -> manual box opens
+  await page.waitForTimeout(200);
+  const pasteFallback = await page.textContent('#setup-err');
+  await page.fill('#setup-key', 'not-a-key'); await page.click('#setup-save');
+  const badKey = await page.textContent('#setup-err');
+  await page.fill('#setup-key', 'sk-ant-api03-' + 'x'.repeat(40)); await page.click('#setup-save');
+  await page.screenshot({ path: `${out}/setup-done.png` });
+  const noKey = { setupOpen, pasteFallback, badKey };
+  // Scan straight from the "ready" screen
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.click('#setup-done [data-act=scan]')]);
+  await chooser.setFiles(photo);
   await page.waitForSelector('#scan-msg strong:has-text("Check these numbers")', { timeout: 20000 });
   await page.screenshot({ path: `${out}/scan-result.png` });
 
@@ -42,7 +50,8 @@ srv.listen(8766, async () => {
   await page.click('#f-save');
   const saved = await page.evaluate(() => { const r = BPD.state.readings.filter(x => x.source === 'photo'); return r.map(x => ({ sys: x.sys, dia: x.dia, pulse: x.pulse, t: new Date(x.ts).toString().slice(0, 21), s: x.session })); });
   // Unreadable + auth error paths
-  mode = 'unreadable'; await page.click('#tab-add'); await page.setInputFiles('#scan-file', photo);
+  mode = 'unreadable'; await page.click('.tab[data-view=today]');
+  const [ch2] = await Promise.all([page.waitForEvent('filechooser'), page.click('#view-today [data-act=scan]')]); await ch2.setFiles(photo);
   await page.waitForSelector('.scan-status.bad', { timeout: 20000 }); const unreadable = await page.textContent('#scan-msg');
   mode = 'auth'; await page.setInputFiles('#scan-file', photo);
   await page.waitForFunction(() => /not accepted/.test(document.querySelector('#scan-msg').textContent), null, { timeout: 20000 }); const auth = await page.textContent('#scan-msg');
