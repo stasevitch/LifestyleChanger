@@ -204,6 +204,13 @@ form.reading { display: grid; gap: 14px; }
 .field input.ai-filled, .ai-filled { border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
 .field input.ai-unsure, .ai-unsure { border-color: var(--c-stage1) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-stage1) 22%, transparent); }
 .photo-full { width: 100%; border-radius: 12px; display: block; }
+.frame-overlay { align-items: center; background: rgba(8,14,20,.88); }
+.frame-box { width: 100%; max-width: 560px; display: grid; gap: 12px; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); color: #fff; }
+.frame-box p { margin: 0; text-align: center; font-weight: 600; }
+.frame-stage { position: relative; justify-self: center; touch-action: none; user-select: none; -webkit-user-select: none; line-height: 0; }
+.frame-stage canvas { max-width: 100%; max-height: 66vh; border-radius: 10px; display: block; }
+.frame-rect { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); border-radius: 4px; pointer-events: none; }
+.scan-status .btn.link { padding: 4px 0 0; font-size: .92rem; }
 .tip { font-size: .82rem; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
 textarea { width: 100%; resize: vertical; min-height: 60px; }
 
@@ -308,6 +315,15 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
       <button class="btn danger block" type="button" id="f-delete" hidden>Delete reading</button>
       <p class="tip" id="f-tip">Sit quietly for 5 minutes, feet flat, arm resting at heart level. Take 2 readings 1 minute apart. Both count toward this session's average.</p>
     </form>
+  </div>
+</div>
+
+<!-- Frame the numbers on a photo -->
+<div class="overlay frame-overlay" id="frame-overlay" hidden>
+  <div class="frame-box" role="dialog" aria-modal="true" aria-labelledby="frame-title">
+    <p id="frame-title">Drag your finger across the numbers to frame them</p>
+    <div class="frame-stage" id="frame-stage"><canvas id="frame-canvas"></canvas><div class="frame-rect" id="frame-rect" hidden></div></div>
+    <div class="btn-row"><button class="btn" type="button" id="frame-cancel">Cancel</button><button class="btn primary" type="button" id="frame-read" disabled>Read these numbers</button></div>
   </div>
 </div>
 
@@ -1070,7 +1086,7 @@ function openSheet(opts = {}) {
 function closeSheet() { $('#sheet-overlay').hidden = true; editing = null; }
 $('#sheet-cancel').addEventListener('click', closeSheet);
 $('#sheet-overlay').addEventListener('click', e => { if (e.target.id === 'sheet-overlay') closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#frame-overlay').hidden) { closeFrame(); return; } closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
 
 function readForm() {
   const sys = parseInt($('#f-sys').value, 10), dia = parseInt($('#f-dia').value, 10);
@@ -1161,6 +1177,7 @@ function resetScan(editingExisting) {
   clearMarks();
   $('#scan-status').hidden = true;
   $('#scan-msg').textContent = '';
+  lastScan = null;
   $('#scan-thumb').removeAttribute('src');
   $('#scan-btn').hidden = $('#scan-lib-btn').hidden = !!editingExisting || inFrame;
 }
@@ -1200,6 +1217,7 @@ async function photoTakenAt(file) {
 
 $('#scan-file').addEventListener('change', e => onScanFile(e, false));
 $('#scan-lib').addEventListener('change', e => onScanFile(e, true));
+let lastScan = null; // { file, fromLibrary, canvas, thumb } for framing again
 async function onScanFile(e, fromLibrary) {
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -1210,15 +1228,23 @@ async function onScanFile(e, fromLibrary) {
   let photo;
   try { photo = await loadPhoto(file); }
   catch (err) { setScanStatus('bad', "<strong>Couldn't open that photo.</strong>Try taking it again."); return; }
+  lastScan = { file, fromLibrary, canvas: photo.canvas, thumb: photo.thumb };
   setScanStatus('', '<strong><span class="spinner"></span>Reading the numbers…</strong>', photo.thumb);
   await new Promise(r => setTimeout(r, 30)); // let the status paint before the work starts
   const r = readPhoto(photo.canvas);
   if (!r) {
-    setScanStatus('bad', "<strong>Couldn't read the numbers.</strong>Take the photo straight on, close enough that the screen fills most of the picture, and without glare. Or type them in.");
+    setScanStatus('bad', '<strong>Couldn\'t find the numbers in this photo.</strong>Frame them with your finger, or type them in.<button type="button" class="btn link" data-act="frame">Frame the numbers</button>');
+    if (fromLibrary) openFrame(); // older photos are usually zoomed out: go straight to framing
     return;
   }
+  await applyScan(r);
+}
+
+async function applyScan(r) {
+  const { file, fromLibrary } = lastScan;
+  clearMarks();
   const unsure = new Set(r.unsure || []);
-  const fill = (id, v, key) => { if (v == null) return; const el = $(id); el.value = v; el.classList.add(unsure.has(key) ? 'ai-unsure' : 'ai-filled'); };
+  const fill = (id, v, key) => { const el = $(id); el.value = v == null ? '' : v; if (v != null) el.classList.add(unsure.has(key) ? 'ai-unsure' : 'ai-filled'); };
   fill('#f-sys', r.systolic, 'systolic');
   fill('#f-dia', r.diastolic, 'diastolic');
   fill('#f-pulse', r.pulse, 'pulse');
@@ -1239,9 +1265,53 @@ async function onScanFile(e, fromLibrary) {
   if (timeUnknown) notes.push("Couldn't tell when this photo was taken. Set the date and time before saving.");
   else if (fromLibrary) notes.push('Date and time come from when the photo was taken.');
   setScanStatus(unsure.size || !r.pulse || timeUnknown ? 'warn' : '',
-    `<strong>Check these numbers against the photo, then save.</strong>${notes.join(' ')}`);
+    `<strong>Check these numbers against the photo, then save.</strong>${notes.join(' ')}<button type="button" class="btn link" data-act="frame">Wrong numbers? Frame them</button>`, lastScan.thumb);
   $('#f-sys').scrollIntoView({ block: 'nearest' });
 }
+
+/* Frame the numbers: the user drags a box over the digits; only that area is read. */
+let frameSel = null;
+function openFrame() {
+  if (!lastScan) return;
+  const src = lastScan.canvas, c = $('#frame-canvas');
+  const scale = Math.min(1, 1200 / Math.max(src.width, src.height));
+  c.width = Math.round(src.width * scale); c.height = Math.round(src.height * scale);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  frameSel = null; $('#frame-rect').hidden = true; $('#frame-read').disabled = true;
+  $('#frame-overlay').hidden = false;
+}
+function closeFrame() { $('#frame-overlay').hidden = true; }
+(() => {
+  const stage = $('#frame-stage'), rectEl = $('#frame-rect');
+  let start = null;
+  const pos = e => { const b = $('#frame-canvas').getBoundingClientRect();
+    return { x: Math.max(0, Math.min(b.width, e.clientX - b.left)), y: Math.max(0, Math.min(b.height, e.clientY - b.top)), bw: b.width, bh: b.height }; };
+  const draw = (a, b) => { const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.abs(a.x - b.x), h = Math.abs(a.y - b.y);
+    Object.assign(rectEl.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' }); rectEl.hidden = false;
+    frameSel = { x: x / a.bw, y: y / a.bh, w: w / a.bw, h: h / a.bh }; };
+  stage.addEventListener('pointerdown', e => { start = pos(e); stage.setPointerCapture(e.pointerId); e.preventDefault(); });
+  stage.addEventListener('pointermove', e => { if (start) draw(start, pos(e)); });
+  stage.addEventListener('pointerup', e => { if (!start) return; draw(start, pos(e)); start = null;
+    $('#frame-read').disabled = !(frameSel && frameSel.w > 0.04 && frameSel.h > 0.04); });
+})();
+$('#frame-cancel').addEventListener('click', closeFrame);
+$('#frame-read').addEventListener('click', async () => {
+  if (!lastScan || !frameSel) return;
+  const src = lastScan.canvas;
+  // Add a small margin around the user's box, then read only that part (in any orientation).
+  const m = 0.04, x = Math.max(0, frameSel.x - m), y = Math.max(0, frameSel.y - m);
+  const w = Math.min(1 - x, frameSel.w + 2 * m), h = Math.min(1 - y, frameSel.h + 2 * m);
+  const part = document.createElement('canvas');
+  part.width = Math.max(1, Math.round(w * src.width)); part.height = Math.max(1, Math.round(h * src.height));
+  part.getContext('2d').drawImage(src, x * src.width, y * src.height, part.width, part.height, 0, 0, part.width, part.height);
+  closeFrame();
+  setScanStatus('', '<strong><span class="spinner"></span>Reading the numbers…</strong>', lastScan.thumb);
+  await new Promise(r => setTimeout(r, 30));
+  const r = readPhoto(part);
+  if (r) { await applyScan(r); return; }
+  setScanStatus('bad', '<strong>Still couldn\'t read the numbers.</strong>Type them in, or take a new photo straight on and without glare.<button type="button" class="btn link" data-act="frame">Try framing again</button>');
+});
+
 $('#scan-thumb').addEventListener('click', () => {
   const src = $('#scan-thumb').src;
   if (!src) return;
@@ -1273,6 +1343,7 @@ document.addEventListener('click', e => {
   }
   else if (act === 'scan') startScan(false);
   else if (act === 'scan-lib') startScan(true);
+  else if (act === 'frame') openFrame();
   else if (act === 'clear-all') {
     if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to delete everything'; return; }
     state.readings = []; persist(); render(); toast('All readings deleted');
