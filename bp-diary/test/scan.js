@@ -32,14 +32,16 @@ srv.listen(8768, async () => {
   const saved = await page.evaluate(() => BPD.state.readings.filter(r => r.source === 'photo').map(r => `${r.sys}/${r.dia}/${r.pulse}`));
   const b = await scan('monitor-b.jpg', true);           // side-by-side layout from the library, want 136/58/110
   await page.click('#sheet-cancel');
+  const side = await scan('monitor-a-sideways.jpg', true); // photo turned 90°, want 95/59
+  await page.click('#sheet-cancel');
   const c = await scan('not-a-monitor.png', true);       // an app icon: should fail politely
   await page.screenshot({ path: path.join(out, 'scan-fail.png') });
   await page.click('#sheet-cancel');
   const todayClean = await page.evaluate(() => !document.querySelector('#view-today [data-act=scan]') && !document.querySelector('.quick-add'));
 
-  const result = { a, saved, b, c, todayClean, external: [...new Set(external)], errors };
+  const result = { a, saved, b, side, c, todayClean, external: [...new Set(external)], errors };
   console.log(JSON.stringify(result, null, 1));
-  const ok = a.sys === '95' && a.dia === '59' && saved.length === 1 && b.sys === '136' && b.dia === '58' && c.bad && todayClean && !result.external.length && !errors.length;
+  const ok = a.sys === '95' && a.dia === '59' && saved.length === 1 && b.sys === '136' && b.dia === '58' && side.sys === '95' && side.dia === '59' && c.bad && todayClean && !result.external.length && !errors.length;
   console.log(ok ? 'PASS' : 'FAIL');
   await browser.close(); srv.close(); process.exit(ok ? 0 : 1);
 });
