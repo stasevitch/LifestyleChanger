@@ -10,4 +10,4 @@ Tools that help people live healthier: track blood pressure, cut down on alcohol
 | `site/` | Landing page for the hosted site | |
 
 The site is built and published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`.
-Live app: https://stasevitch.github.io/lifestylechanger/bp-diary/
+Live app: https://stasevitch.github.io/LifestyleChanger/bp-diary/
