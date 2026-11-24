@@ -29,7 +29,7 @@ srv.listen(8766, async () => {
   await page.goto('http://localhost:8766/'); await page.waitForTimeout(400);
   await page.screenshot({ path: `${out}/today.png` });
   // No key yet: Today's Scan button opens the guided setup
-  await page.click('[data-act=scan]');
+  await page.click('#tab-add'); await page.click('#scan-btn');
   const setupOpen = await page.isVisible('#setup-overlay');
   await page.screenshot({ path: `${out}/setup.png` });
   await page.click('#setup-paste');               // clipboard is empty/denied here -> manual box opens
@@ -51,7 +51,7 @@ srv.listen(8766, async () => {
   const saved = await page.evaluate(() => { const r = BPD.state.readings.filter(x => x.source === 'photo'); return r.map(x => ({ sys: x.sys, dia: x.dia, pulse: x.pulse, t: new Date(x.ts).toString().slice(0, 21), s: x.session })); });
   // Unreadable + auth error paths
   mode = 'unreadable'; await page.click('.tab[data-view=today]');
-  const [ch2] = await Promise.all([page.waitForEvent('filechooser'), page.click('#view-today [data-act=scan]')]); await ch2.setFiles(photo);
+  const [ch2] = await Promise.all([page.waitForEvent('filechooser'), page.click('#tab-add').then(() => page.click('#scan-btn'))]); await ch2.setFiles(photo);
   await page.waitForSelector('.scan-status.bad', { timeout: 20000 }); const unreadable = await page.textContent('#scan-msg');
   mode = 'auth'; await page.setInputFiles('#scan-file', photo);
   await page.waitForFunction(() => /not accepted/.test(document.querySelector('#scan-msg').textContent), null, { timeout: 20000 }); const auth = await page.textContent('#scan-msg');
