@@ -190,6 +190,19 @@ form.reading { display: grid; gap: 14px; }
 .check { display: flex; gap: 10px; align-items: center; font-size: .92rem; }
 .check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .err { color: var(--c-stage2); font-size: .88rem; min-height: 1.2em; margin: 0; }
+.scan-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 1.5px dashed var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 14px; padding: 12px; font-weight: 600; }
+.scan-btn svg { width: 20px; height: 20px; }
+.scan-status { display: flex; gap: 12px; align-items: center; background: var(--surface-2); border-radius: 14px; padding: 10px; }
+.scan-status img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; flex: none; background: var(--line); }
+.scan-status .msg { font-size: .9rem; min-width: 0; }
+.scan-status .msg strong { display: block; }
+.scan-status.warn { background: color-mix(in srgb, var(--c-elevated) 14%, var(--surface)); }
+.scan-status.bad { background: color-mix(in srgb, var(--c-stage2) 12%, var(--surface)); }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; vertical-align: -2px; margin-right: 6px; }
+@media (prefers-reduced-motion: no-preference) { .spinner { animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } } }
+.field input.ai-filled, .ai-filled { border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.field input.ai-unsure, .ai-unsure { border-color: var(--c-stage1) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-stage1) 22%, transparent); }
+.photo-full { width: 100%; border-radius: 12px; display: block; }
 .tip { font-size: .82rem; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
 textarea { width: 100%; resize: vertical; min-height: 60px; }
 
@@ -204,7 +217,7 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: up .22s ease-out; }
-  @keyframes up { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+  @keyframes up { from { transform: translateY(24px); } to { transform: none; } }
 }
 @media print {
   body::before, .top, main, .tabs, .overlay:not(.report-overlay), .toast, .no-print { display: none !important; }
@@ -253,6 +266,9 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
       <button class="btn link" type="button" id="sheet-cancel">Cancel</button>
     </div>
     <form class="reading" id="reading-form" novalidate>
+      <button type="button" class="scan-btn" id="scan-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>Scan monitor with camera</button>
+      <input type="file" id="scan-file" accept="image/*" capture="environment" hidden>
+      <div class="scan-status" id="scan-status" hidden><img id="scan-thumb" alt="Photo of the monitor"><div class="msg" id="scan-msg"></div></div>
       <div class="big-inputs">
         <label class="field"><span>Systolic</span><input class="big" id="f-sys" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="120" autocomplete="off"></label>
         <div class="slash">/</div>
@@ -747,6 +763,16 @@ function renderMore() {
       <div class="item"><label for="s-arm">Usual arm</label><select id="s-arm">${opt('left', 'Left', s.defaultArm)}${opt('right', 'Right', s.defaultArm)}</select></div>
     </div>
 
+    <h2 class="sec">Scan with camera</h2>
+    <div class="card" style="display:grid;gap:10px">
+      <p class="prose" style="margin:0">Take a photo of any blood pressure monitor and the numbers are filled in for you to check. Photos are read by Claude (Anthropic's AI) using your own API key, and are not stored. Each scan costs about one cent.</p>
+      ${scanKey() ? `<p style="margin:0"><span class="pill cat-normal">Camera scan is on</span></p>
+      <div class="btn-row"><button class="btn danger" data-act="remove-key">Remove API key</button></div>`
+      : `<label class="field"><span>Anthropic API key</span><input type="password" id="s-key" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" style="width:100%"></label>
+      <button class="btn primary" data-act="save-key">Save key</button>
+      <p class="small muted" style="margin:0">Create a key at console.anthropic.com. It stays on this phone only.</p>`}
+    </div>
+
     <h2 class="sec">Import from your monitor</h2>
     <div class="card" style="display:grid;gap:10px">
       <p class="prose" style="margin:0">Export a CSV file from the OMRON connect app (or any monitor app that exports CSV), then pick it here. Duplicates are skipped.</p>
@@ -1038,6 +1064,7 @@ function openSheet(opts = {}) {
   $('#f-irr').checked = r ? !!r.irregular : false;
   $('#f-note').value = r ? r.note || '' : '';
   $('#f-err').textContent = '';
+  resetScan(!!r);
   $('#f-delete').hidden = !r;
   $('#f-delete').textContent = 'Delete reading';
   delete $('#f-delete').dataset.armed;
@@ -1072,7 +1099,7 @@ function save(another) {
   else {
     const hadExamples = hasExamples();
     if (hadExamples) state.readings = state.readings.filter(r => r.source !== 'example');
-    state.readings.push({ id: uid(), source: 'manual', ...v });
+    state.readings.push({ id: uid(), source: scanUsed ? 'photo' : 'manual', ...v });
     toast(hadExamples ? 'Saved. Example readings removed.' : 'Reading saved');
   }
   persist();
@@ -1087,6 +1114,190 @@ $('#f-delete').addEventListener('click', e => {
   if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; return; }
   state.readings = state.readings.filter(r => r !== editing);
   persist(); closeSheet(); render(); toast('Reading deleted');
+});
+
+/* ---------- Camera scan (Claude vision) ---------- */
+// Reads any monitor's display from a photo. The API key is the user's own and
+// stays in this browser; the photo goes only to the Anthropic API.
+const KEY_STORE = 'bpdiary.apikey';
+const SDK_URL = './vendor/anthropic-sdk-1.7.0.js';
+const SCAN_MODEL = 'claude-opus-5-5';
+let scanUsed = false;
+function scanKey() { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
+
+const SCAN_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['readable', 'systolic', 'diastolic', 'pulse', 'year', 'month', 'day', 'hour', 'minute', 'irregular_heartbeat', 'is_memory_or_average', 'uncertain_fields', 'device', 'problem'],
+  properties: {
+    readable: { type: 'boolean', description: 'True if the photo shows a blood pressure monitor display with a measurement you can read.' },
+    systolic: { type: ['integer', 'null'], description: 'Systolic (SYS, top/largest) value in mmHg.' },
+    diastolic: { type: ['integer', 'null'], description: 'Diastolic (DIA, middle) value in mmHg.' },
+    pulse: { type: ['integer', 'null'], description: 'Pulse (PUL, PULSE, /min, heart icon) in beats per minute.' },
+    year: { type: ['integer', 'null'], description: 'Four-digit year if the display shows it, else null.' },
+    month: { type: ['integer', 'null'], description: 'Month 1-12 if the display shows a date, else null.' },
+    day: { type: ['integer', 'null'], description: 'Day of month if the display shows a date, else null.' },
+    hour: { type: ['integer', 'null'], description: 'Hour 0-23 if the display shows a time (convert AM/PM), else null.' },
+    minute: { type: ['integer', 'null'], description: 'Minute 0-59 if the display shows a time, else null.' },
+    irregular_heartbeat: { type: 'boolean', description: 'True if an irregular heartbeat / arrhythmia / AFib symbol is lit.' },
+    is_memory_or_average: { type: 'boolean', description: 'True if the screen shows a stored memory or an average (M, MEM, AVG, AVE, number of memory) rather than a fresh reading.' },
+    uncertain_fields: { type: 'array', items: { type: 'string', enum: ['systolic', 'diastolic', 'pulse', 'date', 'time'] }, description: 'Fields you could not read with confidence (glare, blur, cut off, ambiguous digit).' },
+    device: { type: ['string', 'null'], description: 'Brand and model if printed on the device, else null.' },
+    problem: { type: ['string', 'null'], description: 'If not readable or something is off, one short sentence for the user on how to retake the photo. Else null.' },
+  },
+};
+
+const SCAN_PROMPT = `This is a photo of a home blood pressure monitor's display. It can be any brand and model (upper-arm or wrist).
+Read the measurement shown on the screen.
+- Use the labels on the display (SYS, DIA, PUL/PULSE, mmHg, /min, heart icons) to tell the values apart. Without labels, the usual layout is systolic on top, diastolic in the middle, pulse at the bottom or smallest.
+- Seven-segment LCD digits are easy to confuse (1/7, 3/8, 5/6, 0/8). Look closely; if a digit is unclear, still give your best reading and list the field in uncertain_fields.
+- Only report a date or time if it is shown on the display itself. Do not guess them.
+- If the screen shows a stored memory or an average instead of a new reading, set is_memory_or_average.
+- If the photo does not show a readable blood pressure display, set readable to false, leave the values null and explain how to retake the photo in problem.`;
+
+let sdkPromise = null;
+function loadSDK() {
+  if (!sdkPromise) sdkPromise = import(SDK_URL).then(m => m.default).catch(e => { sdkPromise = null; throw e; });
+  return sdkPromise;
+}
+
+// Downscale on the phone: the digits stay sharp and the upload stays small.
+async function prepareImage(file) {
+  const bmp = await createImageBitmap(file);
+  const max = 1092, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  if (bmp.close) bmp.close();
+  const dataUrl = c.toDataURL('image/jpeg', 0.88);
+  return { dataUrl, base64: dataUrl.split(',')[1] };
+}
+
+async function readMonitorPhoto(base64) {
+  const Anthropic = await loadSDK();
+  const client = new Anthropic({ apiKey: scanKey(), dangerouslyAllowBrowser: true, maxRetries: 1 });
+  const base = {
+    model: SCAN_MODEL,
+    max_tokens: 4000,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: SCAN_SCHEMA } },
+    messages: [{ role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+      { type: 'text', text: SCAN_PROMPT },
+    ] }],
+  };
+  let res;
+  try {
+    // Server-side fallback: if the model declines, the API retries on another model in the same call.
+    res = await client.beta.messages.create({ ...base, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
+  } catch (e) {
+    if (e instanceof Anthropic.BadRequestError && /fallback/i.test(e.message || '')) res = await client.messages.create(base);
+    else throw e;
+  }
+  if (res.stop_reason === 'refusal') throw new Error('refused');
+  if (res.stop_reason === 'max_tokens') throw new Error('truncated');
+  const text = res.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  return JSON.parse(text);
+}
+
+function scanErrorMessage(e, Anthropic) {
+  if (Anthropic) {
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return 'Your API key was not accepted. Check it under More, Scan with camera.';
+    if (e instanceof Anthropic.RateLimitError) return 'Too many scans in a short time, or your API credit has run out. Try again in a minute, or check your balance at console.anthropic.com.';
+    if (e instanceof Anthropic.APIConnectionError) return 'No connection. Scanning needs internet; you can type the numbers instead.';
+    if (e instanceof Anthropic.InternalServerError) return 'The reading service is busy. Try again in a moment.';
+    if (e instanceof Anthropic.BadRequestError && /credit/i.test(e.message || '')) return 'Your API credit balance is too low. Add credit at console.anthropic.com.';
+  }
+  if (!navigator.onLine) return 'No connection. Scanning needs internet; you can type the numbers instead.';
+  return "Couldn't read the photo. Try again, or type the numbers.";
+}
+
+function setScanStatus(kind, html, img) {
+  const box = $('#scan-status');
+  box.hidden = false;
+  box.className = 'scan-status' + (kind ? ' ' + kind : '');
+  if (img) $('#scan-thumb').src = img;
+  $('#scan-msg').innerHTML = html;
+}
+
+function clearMarks() { $$('#reading-form .ai-filled, #reading-form .ai-unsure').forEach(el => el.classList.remove('ai-filled', 'ai-unsure')); }
+function resetScan(editingExisting) {
+  scanUsed = false;
+  clearMarks();
+  $('#scan-status').hidden = true;
+  $('#scan-thumb').removeAttribute('src');
+  $('#scan-btn').hidden = !!editingExisting || inFrame;
+}
+
+$('#scan-btn').addEventListener('click', () => {
+  if (!scanKey()) {
+    $('#f-err').textContent = 'To scan, add your Anthropic API key first under More, Scan with camera.';
+    return;
+  }
+  $('#scan-file').click();
+});
+
+$('#scan-file').addEventListener('change', async e => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  $('#f-err').textContent = '';
+  clearMarks();
+  let img;
+  try { img = await prepareImage(file); }
+  catch (err) { setScanStatus('bad', "<strong>Couldn't open that photo.</strong>Try taking it again."); return; }
+  setScanStatus('', '<strong><span class="spinner"></span>Reading the display…</strong>This takes a few seconds.', img.dataUrl);
+  $('#scan-btn').disabled = true;
+  let r, Anthropic = null;
+  try { Anthropic = await loadSDK(); r = await readMonitorPhoto(img.base64); }
+  catch (err) { setScanStatus('bad', `<strong>Scan failed.</strong>${esc(scanErrorMessage(err, Anthropic))}`); $('#scan-btn').disabled = false; return; }
+  $('#scan-btn').disabled = false;
+
+  if (!r || !r.readable || !r.systolic || !r.diastolic) {
+    setScanStatus('bad', `<strong>Couldn't read the numbers.</strong>${esc(r && r.problem ? r.problem : 'Take the photo straight on, closer, and without glare on the screen.')}`);
+    return;
+  }
+  const unsure = new Set(r.uncertain_fields || []);
+  const fill = (id, v, key) => { if (v == null) return; const el = $(id); el.value = v; el.classList.add(unsure.has(key) ? 'ai-unsure' : 'ai-filled'); };
+  fill('#f-sys', r.systolic, 'systolic');
+  fill('#f-dia', r.diastolic, 'diastolic');
+  fill('#f-pulse', r.pulse, 'pulse');
+  if (r.irregular_heartbeat) $('#f-irr').checked = true;
+
+  // Date and time: from the display when shown, otherwise when the photo was taken.
+  const shot = new Date(file.lastModified || Date.now());
+  const base = isNaN(shot) || shot > new Date() ? new Date() : shot;
+  let when = new Date(base);
+  let fromDisplay = false;
+  if (r.month && r.day) {
+    let y = r.year || base.getFullYear();
+    when = new Date(y, r.month - 1, r.day, base.getHours(), base.getMinutes());
+    if (!r.year && when > new Date(Date.now() + DAY)) when.setFullYear(y - 1);
+    fromDisplay = true;
+  }
+  if (r.hour != null && r.minute != null) { when.setHours(r.hour, r.minute, 0, 0); fromDisplay = true; }
+  if (isNaN(when) || when > new Date(Date.now() + 5 * 6e4)) when = base;
+  $('#f-when').value = toLocalInput(when);
+  $('#f-when').classList.add(unsure.has('date') || unsure.has('time') ? 'ai-unsure' : 'ai-filled');
+  setSeg('f-session', sessionFor(when));
+  scanUsed = true;
+
+  const notes = [];
+  if (unsure.size) notes.push('Orange fields were hard to read. Compare them with the photo.');
+  if (r.is_memory_or_average) notes.push('This looks like a stored or average value, not a new reading. Check the date and time.');
+  if (!fromDisplay) notes.push('Your monitor shows no date, so the photo time is used.');
+  if (r.problem && unsure.size) notes.push(esc(r.problem));
+  setScanStatus(unsure.size || r.is_memory_or_average ? 'warn' : '',
+    `<strong>Check these numbers against the photo, then save.</strong>${notes.join(' ')}${r.device ? `<div class="muted small">${esc(r.device)}</div>` : ''}`);
+  $('#f-sys').scrollIntoView({ block: 'nearest' });
+});
+$('#scan-thumb').addEventListener('click', () => {
+  const src = $('#scan-thumb').src;
+  if (!src) return;
+  const box = $('#scan-status');
+  const big = box.querySelector('.photo-full');
+  if (big) { big.remove(); return; }
+  const im = document.createElement('img'); im.src = src; im.className = 'photo-full'; im.alt = 'Photo of the monitor, enlarged';
+  box.style.flexWrap = 'wrap'; box.appendChild(im);
 });
 
 /* ---------- Delegated actions ---------- */
@@ -1107,6 +1318,17 @@ document.addEventListener('click', e => {
     const n = importPreview.ok.length;
     state.readings = state.readings.filter(r => r.source !== 'example').concat(importPreview.ok);
     importPreview = null; importRows = null; persist(); render(); toast(`Imported ${n} readings`);
+  }
+  else if (act === 'save-key') {
+    const k = ($('#s-key').value || '').trim();
+    if (!/^sk-ant-/.test(k)) { toast('That doesn\'t look like an Anthropic API key (it starts with sk-ant-).'); return; }
+    try { localStorage.setItem(KEY_STORE, k); toast('Camera scan is on'); } catch (e) { toast('Could not save the key on this device.'); }
+    renderMore();
+  }
+  else if (act === 'remove-key') {
+    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to remove'; return; }
+    try { localStorage.removeItem(KEY_STORE); } catch (e) {}
+    toast('API key removed'); renderMore();
   }
   else if (act === 'clear-all') {
     if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to delete everything'; return; }
