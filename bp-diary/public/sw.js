@@ -1,6 +1,6 @@
 // Offline cache for the app shell. Data lives in localStorage, never here.
 const CACHE = 'bpdiary-__VERSION__';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png', 'vendor/anthropic-sdk-1.7.0.js'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png', 'bpocr.js'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
