@@ -1438,7 +1438,19 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) rend
 window.BPD = { parseCSV, buildImport, parseDateTime, category, get state() { return state; } };
 
 if ('serviceWorker' in navigator && !inFrame && /^https:|^http:\/\/localhost/.test(location.href)) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Auto-update: check for a new version whenever the app comes back to the screen,
+  // and reload once when it takes over (sw.js uses skipWaiting + clients.claim).
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    if (!$('#sheet-overlay').hidden || !$('#setup-overlay').hidden) return; // don't lose a reading being typed
+    reloading = true; location.reload();
+  });
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+  }).catch(() => {});
 }
 render();
 })();
