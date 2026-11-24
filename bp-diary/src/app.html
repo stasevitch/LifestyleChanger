@@ -193,6 +193,8 @@ form.reading { display: grid; gap: 14px; }
 .quick-add { display: grid; grid-template-columns: 1.7fr 1fr; gap: 10px; }
 .quick-add .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; font-size: 1.02rem; border-radius: 14px; }
 .quick-add svg { width: 22px; height: 22px; flex: none; }
+.quick-add .lib-link { grid-column: 1 / -1; padding: 2px 0 0; font-size: .95rem; font-weight: 600; background: none; color: var(--accent); }
+.sheet .lib-link { justify-self: center; padding: 0; margin-top: -6px; }
 .setup { display: grid; gap: 12px; }
 .setup p { margin: 0; }
 .steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
@@ -279,7 +281,9 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
     </div>
     <form class="reading" id="reading-form" novalidate>
       <button type="button" class="scan-btn" id="scan-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>Scan monitor with camera</button>
+      <button type="button" class="btn link lib-link" id="scan-lib-btn">or choose a photo you already took</button>
       <input type="file" id="scan-file" accept="image/*" capture="environment" hidden>
+      <input type="file" id="scan-lib" accept="image/*" hidden>
       <div class="scan-status" id="scan-status" hidden><img id="scan-thumb" alt="Photo of the monitor"><div class="msg" id="scan-msg"></div></div>
       <div class="big-inputs">
         <label class="field"><span>Systolic</span><input class="big" id="f-sys" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="120" autocomplete="off"></label>
@@ -342,6 +346,7 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
     <div class="setup" id="setup-done" hidden>
       <div class="done-mark"><span class="pill cat-normal">On</span><b>Camera scan is ready</b><span class="muted small">Point the camera straight at the monitor's screen.</span></div>
       <button class="btn primary block" type="button" data-act="scan">Scan monitor now</button>
+      <button class="btn link lib-link" type="button" data-act="scan-lib">or choose a photo you already took</button>
     </div>
   </div>
 </div>
@@ -625,7 +630,7 @@ function renderToday() {
   $('#view-today').innerHTML = `
     ${exampleBanner()}
     ${severeAlert(todays)}
-    ${inFrame ? '' : `<div class="quick-add"><button class="btn primary" data-act="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg> Scan monitor</button><button class="btn" data-act="add">Type it in</button></div>`}
+    ${inFrame ? '' : `<div class="quick-add"><button class="btn primary" data-act="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg> Scan monitor</button><button class="btn" data-act="add">Type it in</button><button class="btn link lib-link" data-act="scan-lib">or choose a photo you already took</button></div>`}
     <h2 class="sec">${esc(fmtDayHeading(now))}</h2>
     <div class="sessions">${sessionCard('morning', m)}${sessionCard('evening', e)}</div>
     ${x.length ? `<div class="card"><div class="label" style="font-weight:600;margin-bottom:4px">Extra readings</div><div class="extras">${x.map(readingRow).join('')}</div></div>` : ''}
@@ -1261,14 +1266,45 @@ function resetScan(editingExisting) {
   clearMarks();
   $('#scan-status').hidden = true;
   $('#scan-thumb').removeAttribute('src');
-  $('#scan-btn').hidden = !!editingExisting || inFrame;
+  $('#scan-btn').hidden = $('#scan-lib-btn').hidden = !!editingExisting || inFrame;
 }
 
-function startScan() {
+function startScan(fromLibrary) {
   if (!scanKey()) { openSetup(); return; }
-  $('#scan-file').click();
+  $(fromLibrary ? '#scan-lib' : '#scan-file').click();
 }
-$('#scan-btn').addEventListener('click', startScan);
+$('#scan-btn').addEventListener('click', () => startScan(false));
+$('#scan-lib-btn').addEventListener('click', () => startScan(true));
+
+// When a photo was taken, from its EXIF data (JPEG). Returns a Date or null.
+async function photoTakenAt(file) {
+  try {
+    const buf = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
+    if (buf.getUint16(0) !== 0xFFD8) return null;
+    let off = 2;
+    while (off + 4 < buf.byteLength) {
+      const marker = buf.getUint16(off), size = buf.getUint16(off + 2);
+      if (marker === 0xFFE1 && buf.getUint32(off + 4) === 0x45786966) { // "Exif"
+        const t = off + 10, le = buf.getUint16(t) === 0x4949;
+        const u16 = o => buf.getUint16(t + o, le), u32 = o => buf.getUint32(t + o, le);
+        const str = (o, n) => { let r = ''; for (let i = 0; i < n - 1; i++) r += String.fromCharCode(buf.getUint8(t + o + i)); return r; };
+        const readIfd = o => { const out = {}; const n = u16(o); for (let i = 0; i < n; i++) { const e = o + 2 + i * 12; out[u16(e)] = { count: u32(e + 4), val: u32(e + 8) }; } return out; };
+        const ifd0 = readIfd(u32(4));
+        let tag = null;
+        if (ifd0[0x8769]) { const ex = readIfd(ifd0[0x8769].val); tag = ex[0x9003] || ex[0x9004]; }
+        tag = tag || ifd0[0x0132];
+        if (!tag) return null;
+        const m = str(tag.val, tag.count).match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/);
+        if (!m) return null;
+        const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+        return isNaN(d) ? null : d;
+      }
+      if ((marker & 0xFF00) !== 0xFF00) return null;
+      off += 2 + size;
+    }
+  } catch (e) {}
+  return null;
+}
 
 function openSetup() {
   $('#setup-steps').hidden = false; $('#setup-done').hidden = true;
@@ -1295,7 +1331,9 @@ $('#setup-paste').addEventListener('click', async () => {
   catch (e) { $('#setup-manual').open = true; $('#setup-key').focus(); $('#setup-err').textContent = 'Long press the box below and choose Paste.'; }
 });
 
-$('#scan-file').addEventListener('change', async e => {
+$('#scan-file').addEventListener('change', e => onScanFile(e, false));
+$('#scan-lib').addEventListener('change', e => onScanFile(e, true));
+async function onScanFile(e, fromLibrary) {
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
   if (!file) return;
@@ -1325,8 +1363,10 @@ $('#scan-file').addEventListener('change', async e => {
   if (r.irregular_heartbeat) $('#f-irr').checked = true;
 
   // Date and time: from the display when shown, otherwise when the photo was taken.
-  const shot = new Date(file.lastModified || Date.now());
-  const base = isNaN(shot) || shot > new Date() ? new Date() : shot;
+  // A fresh camera photo is "now"; a library photo needs its EXIF time.
+  const taken = await photoTakenAt(file);
+  const shot = taken || (fromLibrary ? null : new Date());
+  const base = !shot || isNaN(shot) || shot > new Date() ? new Date() : shot;
   let when = new Date(base);
   let fromDisplay = false;
   if (r.month && r.day) {
@@ -1338,19 +1378,21 @@ $('#scan-file').addEventListener('change', async e => {
   if (r.hour != null && r.minute != null) { when.setHours(r.hour, r.minute, 0, 0); fromDisplay = true; }
   if (isNaN(when) || when > new Date(Date.now() + 5 * 6e4)) when = base;
   $('#f-when').value = toLocalInput(when);
-  $('#f-when').classList.add(unsure.has('date') || unsure.has('time') ? 'ai-unsure' : 'ai-filled');
+  const timeUnknown = !fromDisplay && !shot;
+  $('#f-when').classList.add(unsure.has('date') || unsure.has('time') || timeUnknown ? 'ai-unsure' : 'ai-filled');
   setSeg('f-session', sessionFor(when));
   scanUsed = true;
 
   const notes = [];
   if (unsure.size) notes.push('Orange fields were hard to read. Compare them with the photo.');
   if (r.is_memory_or_average) notes.push('This looks like a stored or average value, not a new reading. Check the date and time.');
-  if (!fromDisplay) notes.push('Your monitor shows no date, so the photo time is used.');
+  if (timeUnknown) notes.push("Couldn't tell when this photo was taken. Set the date and time before saving.");
+  else if (!fromDisplay && fromLibrary) notes.push('Date and time come from when the photo was taken.');
   if (r.problem && unsure.size) notes.push(esc(r.problem));
-  setScanStatus(unsure.size || r.is_memory_or_average ? 'warn' : '',
+  setScanStatus(unsure.size || r.is_memory_or_average || timeUnknown ? 'warn' : '',
     `<strong>Check these numbers against the photo, then save.</strong>${notes.join(' ')}${r.device ? `<div class="muted small">${esc(r.device)}</div>` : ''}`);
   $('#f-sys').scrollIntoView({ block: 'nearest' });
-});
+}
 $('#scan-thumb').addEventListener('click', () => {
   const src = $('#scan-thumb').src;
   if (!src) return;
@@ -1380,7 +1422,8 @@ document.addEventListener('click', e => {
     state.readings = state.readings.filter(r => r.source !== 'example').concat(importPreview.ok);
     importPreview = null; importRows = null; persist(); render(); toast(`Imported ${n} readings`);
   }
-  else if (act === 'scan') startScan();
+  else if (act === 'scan') startScan(false);
+  else if (act === 'scan-lib') startScan(true);
   else if (act === 'setup-scan') openSetup();
   else if (act === 'remove-key') {
     if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to turn off'; return; }
