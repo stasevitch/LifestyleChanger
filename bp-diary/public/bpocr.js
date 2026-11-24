@@ -178,7 +178,29 @@
       boxes.push(b);
     };
     rec({ x0: 0, x1: W - 1, y0: 0, y1: H - 1 }, 0);
-    return boxes.filter(b => { const h = b.y1 - b.y0 + 1, w = b.x1 - b.x0 + 1; return h >= Hd * 0.25 && h / w > 1.1 && h / w < 9; });
+    // A box much taller than the typical digit is two rows touching (e.g. pulse right under diastolic):
+    // cut it at its emptiest row and split each part again.
+    const hs = boxes.filter(b => (b.x1 - b.x0 + 1) > 0.38 * (b.y1 - b.y0 + 1)).map(b => b.y1 - b.y0 + 1).sort((a, b) => a - b);
+    const typical = hs.length ? hs[Math.floor(hs.length * 0.6)] : 0;
+    if (typical) for (let pass = 0; pass < 2; pass++) {
+      for (let i = boxes.length - 1; i >= 0; i--) {
+        const b = boxes[i], h = b.y1 - b.y0 + 1;
+        if (h < 1.38 * typical) continue;
+        let bestY = -1, bestInk = Infinity;
+        for (let y = b.y0 + Math.round(0.4 * typical); y <= b.y1 - Math.round(0.3 * typical); y++) {
+          let ink = 0; for (let x = b.x0; x <= b.x1; x++) ink += bin[y * W + x];
+          if (ink < bestInk) { bestInk = ink; bestY = y; } }
+        if (bestY < 0) continue;
+        boxes.splice(i, 1);
+        const before = boxes.length;
+        rec({ x0: b.x0, x1: b.x1, y0: b.y0, y1: bestY - 1 }, 0); rec({ x0: b.x0, x1: b.x1, y0: bestY + 1, y1: b.y1 }, 0);
+        if (boxes.length === before) boxes.push(b);
+      }
+    }
+    return boxes.filter(b => { const h = b.y1 - b.y0 + 1, w = b.x1 - b.x0 + 1;
+      if (h < Hd * 0.3 || h / w <= 1.1 || h / w >= 12) return false;
+      if (w < 0.38 * h && h / w < 3.2) return false; // a "1" is a tall thin bar; squat blocks are icons or colour scales
+      return true; });
   }
 
   // Digits of similar height on one baseline, close together, form a number.
@@ -262,5 +284,46 @@
     return { ...(t.res || { systolic: null, diastolic: null, pulse: null, unsure: [] }), found: !!t.res, angle: t.deg, shear: t.shear, numbers: t.nums.map(n => n.text + '@' + n.h + (n.conf < 1 ? '?' : '')), _t: t };
   }
 
-  global.BPOCR = { readMonitor };
+  // Where are the digits? Segment bars are solid, long and thin; find where they cluster.
+  function findScreen(src) {
+    const { gray, W, H } = toGray(src, null, 900, 900);
+    const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height, k = sw / W;
+    let best = null;
+    for (const dark of [true, false]) {
+      const bars = components(binarize(gray, W, H, dark), W, H).filter(c => {
+        const w = c.x1 - c.x0 + 1, h = c.y1 - c.y0 + 1, L = Math.max(w, h), T = Math.min(w, h);
+        return L > Math.min(W, H) * 0.02 && L < Math.min(W, H) * 0.25 && L / T > 2.3 && c.n / (w * h) > 0.5;
+      }).map(c => ({ x: (c.x0 + c.x1) / 2, y: (c.y0 + c.y1) / 2, L: Math.max(c.x1 - c.x0, c.y1 - c.y0), c }));
+      if (bars.length < 6) continue;
+      // densest neighbourhood: for each bar, count bars of similar size nearby
+      let top = null;
+      for (const b of bars) {
+        const near = bars.filter(o => Math.abs(o.x - b.x) < b.L * 4 && Math.abs(o.y - b.y) < b.L * 4 && o.L > b.L * 0.4 && o.L < b.L * 2.5);
+        if (!top || near.length > top.length) top = near;
+      }
+      if (!top || top.length < 6) continue;
+      const x0 = Math.min(...top.map(o => o.c.x0)), x1 = Math.max(...top.map(o => o.c.x1)), y0 = Math.min(...top.map(o => o.c.y0)), y1 = Math.max(...top.map(o => o.c.y1));
+      if (!best || top.length > best.n) best = { n: top.length, x0, x1, y0, y1 };
+    }
+    if (!best) return null;
+    const mx = (best.x1 - best.x0) * 0.2 + 10, my = (best.y1 - best.y0) * 0.2 + 10;
+    const x = Math.max(0, best.x0 - mx), y = Math.max(0, best.y0 - my);
+    return { x: x * k, y: y * k, w: (Math.min(W, best.x1 + mx) - x) * k, h: (Math.min(H, best.y1 + my) - y) * k };
+  }
+
+  const quality = r => !r || !r.found ? -1 : 10 - 2 * r.unsure.length + (r.pulse ? 2 : 0);
+  // Read a whole photo: as is, then the area where digits cluster, then a few standard crops.
+  function readPhoto(src) {
+    const W = src.naturalWidth || src.width, H = src.naturalHeight || src.height;
+    let best = null;
+    const tryCrop = crop => { let r; try { r = readMonitor(src, crop); } catch (e) { return false; } if (quality(r) > quality(best)) best = r; return quality(best) >= 12; };
+    if (tryCrop(null)) return best;
+    const scr = findScreen(src);
+    if (scr && tryCrop(scr)) return best;
+    for (const [fx, fy, fw, fh] of [[0.12, 0.12, 0.76, 0.76], [0.2, 0.15, 0.6, 0.6], [0.05, 0.05, 0.6, 0.6], [0.35, 0.05, 0.6, 0.6], [0.05, 0.35, 0.6, 0.6], [0.35, 0.35, 0.6, 0.6]])
+      if (tryCrop({ x: W * fx, y: H * fy, w: W * fw, h: H * fh })) return best;
+    return best && best.found ? best : null;
+  }
+
+  global.BPOCR = { readMonitor, readPhoto, findScreen };
 })(window);
