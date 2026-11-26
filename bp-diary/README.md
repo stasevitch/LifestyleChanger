@@ -7,7 +7,7 @@ Personal blood pressure diary. Installable web app (PWA) for iPhone and Android;
 - Pulse, arm, position, irregular-heartbeat flag, tags (coffee, alcohol, smoked, stress, exercise, poor sleep, salty meal, meds, pain), note.
 - ACC/AHA adult categories with colour coding and a severe-reading warning.
 - Trends: 7 / 30 / 90 days / all, daily-average chart, morning vs evening, category mix, tag patterns.
-- Doctor report: a day-by-day journal table (morning and evening, BP and pulse, notes) for 14/30/90 days or all, saved as a real PDF or image through the phone's share sheet (Files, Mail, Print...). CSV export, JSON backup and restore.
+- Doctor report: a day-by-day journal table (morning and evening, BP and pulse, notes) for 2 weeks to 1 year, all or chosen dates (a month fits one page), viewable full screen to show the doctor, and saved as a real PDF or image through the phone's share sheet (Files, Mail, Print...). CSV export, JSON backup and restore.
 - CSV import from OMRON connect and other monitor apps (auto-detects columns, delimiters, date order; skips duplicates).
 - Languages: English (main) and Russian, switchable under More → Preferences. Strings live in the `STR` table in `src/app.html`; add a language by adding a table.
 - Date format (device, DD.MM.YYYY, MM/DD/YYYY, YYYY-MM-DD) and 12/24-hour time.
@@ -21,6 +21,7 @@ Personal blood pressure diary. Installable web app (PWA) for iPhone and Android;
 - `test/e2e.js` – Playwright end-to-end check on an emulated iPhone.
 - `test/lang.js` – switches to Russian and checks every screen for untranslated text.
 - `test/report.js` – builds the doctor report in English and Russian and saves the PDF and image.
+- `test/more.js` – More page layout, hold-to-delete, report periods and full-screen view.
 
 ## Build and run
 ```

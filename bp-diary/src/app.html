@@ -204,7 +204,23 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 #report-pages { display: grid; gap: 12px; margin: 4px 0 12px; }
 .report-page { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--line); box-shadow: var(--shadow); background: #fff; }
 .report-actions { position: sticky; bottom: 0; background: var(--surface); padding-block: 10px calc(4px + env(safe-area-inset-bottom, 0px)); }
-.report .sheet-head { gap: 10px; flex-wrap: wrap; }
+.report .sheet-head { gap: 10px; }
+.report-chips { margin-top: 2px; }
+.report-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.report-dates input { width: 100%; }
+.report-page { cursor: zoom-in; }
+.report-actions .btn { flex: 1 1 120px; }
+.viewer { position: fixed; inset: 0; z-index: 60; background: #1b2229; display: flex; flex-direction: column; }
+.viewer-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #c9d3db; font-size: .9rem;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
+.viewer-pages { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; display: grid; gap: 12px; justify-items: center; align-content: start;
+  padding: 0 max(8px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.viewer-page { width: 100%; max-width: 900px; height: auto; background: #fff; border-radius: 4px; cursor: zoom-in; }
+.viewer-pages.zoom { justify-items: start; }
+.viewer-pages.zoom .viewer-page { width: 220%; max-width: none; cursor: zoom-out; }
+.hold { position: relative; overflow: hidden; }
+.hold::before { content: ""; position: absolute; inset: 0; width: calc(var(--p, 0) * 100%); background: color-mix(in srgb, var(--c-stage2) 28%, transparent); transition: width .1s linear; }
+.hold > span { position: relative; }
 .report h2 { font-family: var(--font-num); margin: 0 0 4px; font-size: 1.3rem; }
 .report table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
 .report th, .report td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }
@@ -299,6 +315,12 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
   </div>
 </div>
 
+<!-- Full-screen report view (to show the doctor) -->
+<div class="viewer" id="viewer" hidden>
+  <div class="viewer-bar"><span data-i18n="tapZoom">Tap to zoom</span><button class="btn" type="button" id="viewer-close" data-i18n="close">Close</button></div>
+  <div class="viewer-pages" id="viewer-pages"></div>
+</div>
+
 <!-- Text fallback (export where file download isn't possible) -->
 <div class="overlay" id="text-overlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="text-title">
@@ -314,12 +336,19 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 <div class="overlay report-overlay" id="report-overlay" hidden>
   <div class="sheet report" role="dialog" aria-modal="true" aria-labelledby="report-title">
     <div class="sheet-head">
-      <div class="chips" id="report-range" role="group"></div>
+      <h2 data-i18n="doctorReport">Doctor report</h2>
       <button class="btn link" type="button" id="report-close" data-i18n="close">Close</button>
     </div>
+    <div class="chips report-chips" id="report-range" role="group"></div>
+    <div class="report-dates" id="report-dates" hidden>
+      <label class="field"><span data-i18n="pFrom">From</span><input type="date" id="rp-from"></label>
+      <label class="field"><span data-i18n="pTo">To</span><input type="date" id="rp-to"></label>
+    </div>
+    <p class="small muted" data-i18n="tapToView" style="margin:8px 0 0">Tap a page to view it full screen.</p>
     <div id="report-pages"></div>
     <div class="btn-row report-actions">
-      <button class="btn primary" type="button" id="report-pdf" data-i18n="savePdf" disabled>Save PDF</button>
+      <button class="btn primary" type="button" id="report-view" data-i18n="showDoctor" disabled>Show to doctor</button>
+      <button class="btn" type="button" id="report-pdf" data-i18n="savePdf" disabled>Save PDF</button>
       <button class="btn" type="button" id="report-png" data-i18n="saveImage" disabled>Save as image</button>
     </div>
   </div>
@@ -395,6 +424,10 @@ const STR = {
     rpMethod: 'Each value is the average of the readings taken in that session; ×2 means two readings were averaged. IHB: the monitor showed an irregular heartbeat.',
     rpExtra: 'extra', rpGenerated: d => `BP Diary · created ${d}`, rpPage: (a, b) => `Page ${a} of ${b}`,
     savePdf: 'Save PDF', saveImage: 'Save as image', preparing: 'Preparing the report…',
+    p2w: '2 weeks', p1m: '1 month', p3m: '3 months', p6m: '6 months', p1y: '1 year', pCustom: 'Dates…', pFrom: 'From', pTo: 'To',
+    tapToView: 'Tap a page to view it full screen.', showDoctor: 'Show to doctor', tapZoom: 'Tap the page to zoom',
+    reportCardText: 'A clear day-by-day table of your readings to show or send to your doctor.', openReport: 'Open doctor report', importCsv: 'Import CSV',
+    holdDelete: 'Hold 3 seconds to delete everything', keepHolding: 'Keep holding…',
   },
   ru: {
     appName: 'Дневник давления', tabToday: 'Сегодня', tabHistory: 'История', tabTrends: 'Динамика', tabMore: 'Ещё', mainNav: 'Главное меню', addReading: 'Добавить измерение',
@@ -458,6 +491,10 @@ const STR = {
     rpMethod: 'Каждое значение — среднее из измерений за это время суток; ×2 означает среднее из двух измерений. «Аритмия»: тонометр показал нерегулярный пульс.',
     rpExtra: 'доп.', rpGenerated: d => `«Дневник давления» · создан ${d}`, rpPage: (a, b) => `Стр. ${a} из ${b}`,
     savePdf: 'Сохранить PDF', saveImage: 'Сохранить как изображение', preparing: 'Готовим отчёт…',
+    p2w: '2 недели', p1m: '1 месяц', p3m: '3 месяца', p6m: '6 месяцев', p1y: '1 год', pCustom: 'Даты…', pFrom: 'С', pTo: 'По',
+    tapToView: 'Нажмите на страницу, чтобы открыть её на весь экран.', showDoctor: 'Показать врачу', tapZoom: 'Нажмите на страницу для увеличения',
+    reportCardText: 'Понятная таблица измерений по дням, чтобы показать или отправить врачу.', openReport: 'Открыть отчёт для врача', importCsv: 'Импорт CSV',
+    holdDelete: 'Удерживайте 3 секунды, чтобы удалить всё', keepHolding: 'Удерживайте…',
   },
 };
 let lang = 'en';
@@ -886,6 +923,12 @@ function renderMore() {
   const sample = new Date(2026, 10, 24, 19, 5);
   $('#view-more').innerHTML = `
     ${exampleBanner()}
+    <h2 class="sec">${t('doctorReport')}</h2>
+    <div class="card" style="display:grid;gap:12px">
+      <p class="prose" style="margin:0">${t('reportCardText')}</p>
+      <button class="btn primary" style="padding:16px;font-size:1.05rem" data-act="report">${t('openReport')}</button>
+    </div>
+
     <h2 class="sec">${t('preferences')}</h2>
     <div class="card list">
       <div class="item"><label for="s-lang">${t('language')}<span class="hint">Language / Язык</span></label><select id="s-lang">${Object.entries(LANGS).map(([k, n]) => opt(k, n, lang)).join('')}</select></div>
@@ -898,23 +941,18 @@ function renderMore() {
       <div class="item"><label for="s-arm">${t('usualArm')}</label><select id="s-arm">${opt('left', t('left'), s.defaultArm)}${opt('right', t('right'), s.defaultArm)}</select></div>
     </div>
 
-    <h2 class="sec">${t('importTitle')}</h2>
-    <div class="card" style="display:grid;gap:10px">
-      <p class="prose" style="margin:0">${t('importText')}</p>
-      <label class="btn primary" style="text-align:center">${t('chooseCsv')}<input type="file" id="import-file" accept=".csv,text/csv,text/plain" hidden></label>
-      <div id="import-preview"></div>
-    </div>
-
     <h2 class="sec">${t('yourData')}</h2>
     <div class="card" style="display:grid;gap:10px">
       <p class="prose" style="margin:0">${t('dataText', plural('readings', state.readings.length))} ${storageOK ? '' : `<strong>${t('storageWarn')}</strong>`}</p>
       <div class="btn-row">
-        <button class="btn" data-act="report">${t('doctorReport')}</button>
+        <label class="btn" style="text-align:center">${t('importCsv')}<input type="file" id="import-file" accept=".csv,text/csv,text/plain" hidden></label>
         <button class="btn" data-act="export-csv">${t('exportCsv')}</button>
         <button class="btn" data-act="backup">${t('backup')}</button>
         <label class="btn" style="text-align:center">${t('restore')}<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
       </div>
-      <button class="btn danger" data-act="clear-all" id="clear-all">${t('deleteAll')}</button>
+      <div id="import-preview"></div>
+      <p class="small muted" style="margin:0">${t('importText')}</p>
+      <button class="btn danger hold" type="button" id="clear-all"><span>${t('deleteAll')}</span></button>
     </div>
 
     ${!standalone && !inFrame ? `<h2 class="sec">${t('installTitle')}</h2>
@@ -940,6 +978,7 @@ function renderMore() {
   $('#s-arm').addEventListener('change', e => { s.defaultArm = e.target.value; persist(); });
   $('#import-file').addEventListener('change', onImportFile);
   $('#restore-file').addEventListener('change', onRestoreFile);
+  setupHoldDelete($('#clear-all'));
   if (importPreview) renderImportPreview();
 }
 
@@ -1136,13 +1175,15 @@ if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prot
 // Pages are drawn on canvas (any language renders correctly), then wrapped into a PDF on the
 // phone. Files are prepared when the report opens so the share sheet opens instantly on tap
 // (iPhone only allows sharing right after a tap, and home-screen apps can't print).
-const RP = { W: 1240, H: 1754, M: 72, rowH: 54 };
+const RP = { W: 1240, H: 1754, M: 72 };
 const RC = { ink: '#13212c', muted: '#5a6b78', accent: '#1d5c8c', head: '#1f5272', headInk: '#ffffff', alt: '#eef4f8', line: '#d3dde4', high: '#fbe1dd', severe: '#f5c4be', boxBg: '#e7f0f7', noteBg: '#fff6e6', noteLine: '#f0c987' };
 const RF = { ui: '"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', num: '"Sora", "Figtree", system-ui, -apple-system, sans-serif' };
-let reportDays = 30, reportFiles = null;
+// Period: { days } counted back from today, or { from, to } chosen by the user (start-of-day times).
+let reportRange = { days: 30 }, reportFiles = null;
+const REPORT_PRESETS = [[14, 'p2w'], [30, 'p1m'], [91, 'p3m'], [182, 'p6m'], [365, 'p1y'], [0, 'all']];
 
-function reportData(days) {
-  const list = inRange(days).sort((a, b) => a.ts - b.ts);
+function reportData(range) {
+  const list = (range.from != null ? state.readings.filter(r => r.ts >= range.from && r.ts < range.to + DAY) : inRange(range.days)).sort((a, b) => a.ts - b.ts);
   if (!list.length) return null;
   const groups = byDay(list);
   const first = startOfDay(new Date(list[0].ts)), last = startOfDay(new Date(list[list.length - 1].ts));
@@ -1165,7 +1206,7 @@ function reportData(days) {
 
 function drawReport(D) {
   const pages = [];
-  let g, y, pageNo = 0;
+  let g, y, pageNo = 0, rowH = 54, fz = px => px;
   const font = (w, px, fam = RF.ui) => `${w} ${px}px ${fam}`;
   const text = (s, x, yy, f, color = RC.ink, align = 'left') => { g.font = f; g.fillStyle = color; g.textAlign = align; g.textBaseline = 'alphabetic'; g.fillText(s, x, yy); };
   const rrect = (x, yy, w, h, r, fill, stroke) => { g.beginPath(); g.roundRect(x, yy, w, h, r); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 3; g.stroke(); } };
@@ -1238,27 +1279,39 @@ function drawReport(D) {
     y += h;
   };
   const cell = (v, x, w, yy) => {
-    if (!v) { text('—', x + w / 2, yy + 36, font(500, 28, RF.num), RC.muted, 'center'); return; }
+    if (!v) { text('—', x + w / 2, yy + rowH * 0.67, font(500, fz(28), RF.num), RC.muted, 'center'); return; }
     const c = category(v.sys, v.dia);
-    if (c === 'stage2' || c === 'severe') { g.fillStyle = c === 'severe' ? RC.severe : RC.high; g.fillRect(x + 1, yy + 1, w - 2, RP.rowH - 2); }
+    if (c === 'stage2' || c === 'severe') { g.fillStyle = c === 'severe' ? RC.severe : RC.high; g.fillRect(x + 1, yy + 1, w - 2, rowH - 2); }
     const main = `${v.sys}/${v.dia}${v.pulse ? ' · ' + v.pulse : ''}`;
-    g.font = font(600, 28, RF.num); const mw = g.measureText(main).width;
+    g.font = font(600, fz(28), RF.num); const mw = g.measureText(main).width;
     const extra = [v.n > 1 ? '×' + v.n : '', v.irr ? t('ihb') : ''].filter(Boolean).join(' ');
-    g.font = font(600, 18); const ew = extra ? g.measureText(extra).width + 10 : 0;
+    g.font = font(600, fz(18)); const ew = extra ? g.measureText(extra).width + 10 : 0;
     const sx = x + w / 2 - (mw + ew) / 2;
-    text(main, sx, yy + 37, font(600, 28, RF.num));
-    if (extra) text(extra, sx + mw + 10, yy + 35, font(600, 18), v.irr ? '#b3261e' : RC.muted);
+    text(main, sx, yy + rowH * 0.69, font(600, fz(28), RF.num));
+    if (extra) text(extra, sx + mw + 10, yy + rowH * 0.65, font(600, fz(18)), v.irr ? '#b3261e' : RC.muted);
   };
 
-  newPage(); tableHead();
+  newPage();
+  // Row height: as tall as possible (54px) but shrink (down to 28px, ~5 mm on paper) so the period fits on the
+  // first page, ideally with the notes too. Very long periods continue on more pages.
+  const noteLines = D.notes.length ? D.notes.length + 4 : 2;
+  const notesH = noteLines * 32 + 50 + 64, room = footerY - 20 - y - 96;
+  rowH = 54;
+  if (D.rows.length * 54 + notesH > room) {
+    const withNotes = Math.floor((room - notesH) / D.rows.length), alone = Math.floor(room / D.rows.length);
+    rowH = withNotes >= 28 ? withNotes : alone >= 30 ? alone : 40;
+  }
+  rowH = Math.min(54, rowH);
+  const k = rowH / 54; fz = px => Math.max(15, Math.round(px * Math.max(k, 0.72)));
+  tableHead();
   D.rows.forEach((r, i) => {
-    if (y + RP.rowH > footerY - 20) { newPage(); tableHead(); }
-    if (i % 2) { g.fillStyle = RC.alt; g.fillRect(M, y, inner, RP.rowH); }
-    text(fmtDate(r.d, false), colX[0] + colW[0] / 2, y + 37, font(700, 27, RF.num), RC.ink, 'center');
+    if (y + rowH > footerY - 20) { newPage(); tableHead(); }
+    if (i % 2) { g.fillStyle = RC.alt; g.fillRect(M, y, inner, rowH); }
+    text(fmtDate(r.d, false), colX[0] + colW[0] / 2, y + rowH * 0.69, font(700, fz(27), RF.num), RC.ink, 'center');
     cell(r.m, colX[1], colW[1], y); cell(r.e, colX[2], colW[2], y);
     g.strokeStyle = RC.line; g.lineWidth = 1.5;
-    g.beginPath(); g.moveTo(M, y + RP.rowH); g.lineTo(M + inner, y + RP.rowH); g.moveTo(colX[1], y); g.lineTo(colX[1], y + RP.rowH); g.moveTo(colX[2], y); g.lineTo(colX[2], y + RP.rowH); g.stroke();
-    y += RP.rowH;
+    g.beginPath(); g.moveTo(M, y + rowH); g.lineTo(M + inner, y + rowH); g.moveTo(colX[1], y); g.lineTo(colX[1], y + rowH); g.moveTo(colX[2], y); g.lineTo(colX[2], y + rowH); g.stroke();
+    y += rowH;
   });
   y += 18;
   // legend
@@ -1318,9 +1371,9 @@ async function pagesToPdf(pages) {
 }
 
 async function buildReport() {
-  const D = reportData(reportDays);
+  const D = reportData(reportRange);
   const box = $('#report-pages');
-  reportFiles = null; $('#report-pdf').disabled = $('#report-png').disabled = true;
+  reportFiles = null; $('#report-pdf').disabled = $('#report-png').disabled = $('#report-view').disabled = true;
   if (!D) { box.innerHTML = `<p class="muted">${t('noPeriod')}</p>`; return; }
   box.innerHTML = `<p class="muted">${t('preparing')}</p>`;
   try { await Promise.all([document.fonts.load(`700 30px ${RF.num}`), document.fonts.load(`600 30px ${RF.num}`), document.fonts.load(`500 22px ${RF.ui}`), document.fonts.load(`700 22px ${RF.ui}`)]); } catch (e) {}
@@ -1332,21 +1385,48 @@ async function buildReport() {
   const pngs = await Promise.all(pages.map(c => new Promise(res => c.toBlob(res, 'image/png'))));
   reportFiles = { pdf: new File([pdf], base + '.pdf', { type: 'application/pdf' }),
     pngs: pngs.map((b, i) => new File([b], base + (pages.length > 1 ? `-${i + 1}` : '') + '.png', { type: 'image/png' })) };
-  $('#report-pdf').disabled = $('#report-png').disabled = false;
+  $('#report-pdf').disabled = $('#report-png').disabled = $('#report-view').disabled = false;
 }
 
 function openReport() {
-  reportDays = trendDays === 7 ? 14 : (trendDays || 0);
-  if (![14, 30, 90, 0].includes(reportDays)) reportDays = 30;
+  reportRange = { days: 30 }; // a month fits on one page when readings are twice a day
   renderReportRange();
   $('#report-overlay').hidden = false;
   buildReport();
 }
 function renderReportRange() {
-  $('#report-range').innerHTML = [[14, t('d14')], [30, t('d30')], [90, t('d90')], [0, t('all')]]
-    .map(([d, l]) => `<button class="chip" type="button" data-days="${d}" aria-pressed="${reportDays === d}">${l}</button>`).join('');
+  const custom = reportRange.from != null;
+  const today = startOfDay(new Date());
+  const from = custom ? new Date(reportRange.from) : new Date(today.getTime() - ((reportRange.days || 30) - 1) * DAY);
+  const to = custom ? new Date(reportRange.to) : today;
+  $('#report-range').innerHTML = REPORT_PRESETS
+    .map(([d, k]) => `<button class="chip" type="button" data-days="${d}" aria-pressed="${!custom && reportRange.days === d}">${t(k)}</button>`).join('')
+    + `<button class="chip" type="button" data-custom="1" aria-pressed="${custom}">${t('pCustom')}</button>`;
+  $('#report-dates').hidden = !custom;
+  $('#rp-from').value = dayKey(from); $('#rp-to').value = dayKey(to);
 }
-$('#report-range').addEventListener('click', e => { const b = e.target.closest('[data-days]'); if (!b) return; reportDays = +b.dataset.days; renderReportRange(); buildReport(); });
+$('#report-range').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.custom) { const today = startOfDay(new Date()).getTime(); reportRange = { from: today - 29 * DAY, to: today }; }
+  else reportRange = { days: +b.dataset.days };
+  renderReportRange(); buildReport();
+});
+$('#report-dates').addEventListener('change', () => {
+  const f = fromDayKey($('#rp-from').value || dayKey(new Date())).getTime(), tt = fromDayKey($('#rp-to').value || dayKey(new Date())).getTime();
+  reportRange = { from: Math.min(f, tt), to: Math.max(f, tt) };
+  renderReportRange(); buildReport();
+});
+// Full-screen view to show the doctor: pages fill the width; tap a page to zoom in, tap again to fit.
+function openViewer(index) {
+  const v = $('#viewer-pages'); v.innerHTML = '';
+  $$('#report-pages img').forEach(src => { const im = document.createElement('img'); im.src = src.src; im.alt = src.alt; im.className = 'viewer-page'; v.appendChild(im); });
+  $('#viewer').hidden = false; v.classList.remove('zoom');
+  const target = v.children[index]; if (target) setTimeout(() => target.scrollIntoView({ block: 'start' }), 30);
+}
+$('#report-pages').addEventListener('click', e => { const im = e.target.closest('img'); if (im) openViewer([...$('#report-pages').children].indexOf(im)); });
+$('#viewer-pages').addEventListener('click', e => { if (e.target.closest('img')) $('#viewer-pages').classList.toggle('zoom'); });
+$('#viewer-close').addEventListener('click', () => { $('#viewer').hidden = true; });
+$('#report-view').addEventListener('click', () => openViewer(0));
 $('#report-close').addEventListener('click', () => { $('#report-overlay').hidden = true; });
 $('#report-pdf').addEventListener('click', () => { if (reportFiles) shareFiles([reportFiles.pdf]); });
 $('#report-png').addEventListener('click', () => { if (reportFiles) shareFiles(reportFiles.pngs); });
@@ -1403,7 +1483,7 @@ function openSheet(opts = {}) {
 function closeSheet() { $('#sheet-overlay').hidden = true; editing = null; }
 $('#sheet-cancel').addEventListener('click', closeSheet);
 $('#sheet-overlay').addEventListener('click', e => { if (e.target.id === 'sheet-overlay') closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#viewer').hidden) { $('#viewer').hidden = true; return; } closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
 
 function readForm() {
   const sys = parseInt($('#f-sys').value, 10), dia = parseInt($('#f-dia').value, 10);
@@ -1443,6 +1523,23 @@ $('#f-delete').addEventListener('click', e => {
   persist(); closeSheet(); render(); toast(t('readingDeleted'));
 });
 
+/* ---------- Delete everything: tap once, then hold for 3 seconds ---------- */
+function setupHoldDelete(btn) {
+  const label = btn.querySelector('span'), HOLD = 3000;
+  let armed = false, start = 0, raf = 0, disarmTimer = 0;
+  const setP = v => btn.style.setProperty('--p', v);
+  const disarm = () => { armed = false; cancelAnimationFrame(raf); setP(0); label.textContent = t('deleteAll'); };
+  const tick = () => { const p = Math.min(1, (performance.now() - start) / HOLD); setP(p);
+    if (p >= 1) { start = 0; state.readings = []; persist(); render(); toast(t('allDeleted')); return; }
+    raf = requestAnimationFrame(tick); };
+  btn.addEventListener('click', () => { if (armed) return; armed = true; label.textContent = t('holdDelete');
+    clearTimeout(disarmTimer); disarmTimer = setTimeout(() => { if (!start) disarm(); }, 8000); });
+  btn.addEventListener('pointerdown', e => { if (!armed) return; e.preventDefault(); start = performance.now(); label.textContent = t('keepHolding'); raf = requestAnimationFrame(tick); });
+  const stop = () => { if (!start) return; start = 0; cancelAnimationFrame(raf); setP(0); if (armed) label.textContent = t('holdDelete'); };
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
+  btn.addEventListener('contextmenu', e => e.preventDefault()); // no iOS long-press menu
+}
+
 /* ---------- Delegated actions ---------- */
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -1461,10 +1558,6 @@ document.addEventListener('click', e => {
     const n = importPreview.ok.length;
     state.readings = state.readings.filter(r => r.source !== 'example').concat(importPreview.ok);
     importPreview = null; importRows = null; persist(); render(); toast(t('imported', n));
-  }
-  else if (act === 'clear-all') {
-    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = t('tapDeleteAll'); return; }
-    state.readings = []; persist(); render(); toast(t('allDeleted'));
   }
 });
 
