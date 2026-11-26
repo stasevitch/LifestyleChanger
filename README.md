@@ -5,7 +5,7 @@ Tools that help people live healthier: track blood pressure, find their way arou
 | Folder | What it is | Status |
 |---|---|---|
 | `bp-diary/` | Blood pressure diary (installable web app) | Phase 1 done |
-| `gym-guide/` | Gym Guide: log workouts and see progress, identify machines and learn how to use them (installable web app) | Workout log, progress, machine identifier done |
+| `gym-guide/` | Gym Guide: track workouts and progress, follow beginner-to-advanced programs, learn the machines (installable web app) | Tracking, programs, machine guide done |
 | `habits/` | Alcohol and smoking tracking, streaks, milestones | Planned |
 | `facts/` | Researched fact library with sources (food, alcohol, smoking; US, China, Europe, Asia) | Planned |
 | `photo-scan` (later) | Read any monitor's screen from a photo, built and tested as its own project, then added to BP Diary once it's reliable. Earlier experiment kept in `bp-diary/tools/ocr-bench/` | Planned, not started |

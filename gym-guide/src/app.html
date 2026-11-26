@@ -136,7 +136,7 @@ p { margin: 0; }
 :root { --danger: #b3261e; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --danger: #f2766b; } }
 :root[data-theme="dark"] { --danger: #f2766b; }
-.tabs .wrap { grid-template-columns: repeat(4, 1fr); }
+.tabs .wrap { grid-template-columns: repeat(5, 1fr); }
 .hbtn { border: 0; background: var(--surface-2); width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; color: var(--ink); }
 .hbtn svg { width: 20px; height: 20px; }
 .btn { border: 0; border-radius: 12px; padding: 13px 16px; font-weight: 700; font-size: 1rem; width: 100%; text-align: center; }
@@ -147,6 +147,7 @@ p { margin: 0; }
 .btns { display: flex; gap: 8px; }
 .btns .btn { flex: 1; }
 .hello { display: grid; gap: 12px; }
+.hello > *, .btn { min-width: 0; }
 .hello h2 { margin: 0; font-family: var(--font-head); font-size: 1.35rem; font-weight: 600; letter-spacing: -.01em; }
 .btn.sec small { display: block; font-weight: 500; color: var(--muted); font-size: .82rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
@@ -269,6 +270,8 @@ p { margin: 0; }
 
 <main class="wrap">
   <section class="view" id="view-workout" aria-label="Workout"></section>
+  <section class="view" id="view-programs" aria-label="Programs" hidden></section>
+  <section class="view" id="view-program" aria-label="Program" hidden></section>
   <section class="view" id="view-history" aria-label="History" hidden></section>
   <section class="view" id="view-progress" aria-label="Progress" hidden></section>
   <section class="view" id="view-machines" aria-label="Machines" hidden></section>
@@ -285,10 +288,12 @@ p { margin: 0; }
   <div class="wrap">
     <button class="tab" data-view="workout" aria-current="page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg><span>Workout</span></button>
-    <button class="tab" data-view="history">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>History</span></button>
     <button class="tab" data-view="progress">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M5 15l4.5-4.5 3.5 3L19 7"/><path d="M15 7h4v4"/></svg><span>Progress</span></button>
+    <button class="tab" data-view="programs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11v16H8z"/><path d="M5 7v13h11"/><path d="M11 9h5M11 13h5"/></svg><span>Programs</span></button>
+    <button class="tab" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>History</span></button>
     <button class="tab" data-view="machines">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Machines</span></button>
   </div>
@@ -592,22 +597,126 @@ const Q_MOVE = [
 // ---------- Exercises that aren't machines ----------
 // type: weight (kg × reps), reps (bodyweight reps), time (hold in seconds), cardio (minutes + distance)
 const FREE = [
-  ['barbell-squat', 'Barbell squat', 'weight', ['Legs', 'Glutes'], ['legs', 'glutes']],
-  ['barbell-bench', 'Barbell bench press', 'weight', ['Chest', 'Triceps', 'Shoulders'], ['chest', 'arms']],
-  ['deadlift', 'Deadlift', 'weight', ['Back', 'Glutes', 'Hamstrings'], ['back', 'legs', 'glutes']],
-  ['romanian-deadlift', 'Romanian deadlift', 'weight', ['Hamstrings', 'Glutes', 'Lower back'], ['legs', 'glutes']],
-  ['db-bench', 'Dumbbell bench press', 'weight', ['Chest', 'Triceps', 'Shoulders'], ['chest', 'arms']],
-  ['db-shoulder-press', 'Dumbbell shoulder press', 'weight', ['Shoulders', 'Triceps'], ['shoulders', 'arms']],
-  ['db-row', 'Dumbbell row', 'weight', ['Upper back (lats)', 'Biceps'], ['back', 'arms']],
-  ['db-curl', 'Dumbbell biceps curl', 'weight', ['Biceps'], ['arms']],
-  ['db-lateral-raise', 'Dumbbell lateral raise', 'weight', ['Shoulders'], ['shoulders']],
-  ['goblet-squat', 'Goblet squat', 'weight', ['Legs', 'Glutes'], ['legs', 'glutes']],
-  ['lunge', 'Lunges', 'weight', ['Legs', 'Glutes'], ['legs', 'glutes']],
-  ['push-up', 'Push-up', 'reps', ['Chest', 'Triceps', 'Shoulders'], ['chest', 'arms']],
-  ['pull-up', 'Pull-up', 'reps', ['Upper back (lats)', 'Biceps'], ['back', 'arms']],
-  ['crunch', 'Crunch', 'reps', ['Abs'], ['core']],
-  ['plank', 'Plank', 'time', ['Abs', 'Core'], ['core']],
-].map(([id, name, type, muscles, groups]) => ({ id, name, type, muscles, groups, aka: [], free: true }));
+  { id: 'barbell-squat', name: 'Barbell squat', muscles: ['Legs', 'Glutes'], groups: ['legs', 'glutes'],
+    steps: ['Bar on your upper back, feet shoulder-width apart, toes turned out a little.', 'Sit your hips back and down, knees following your toes, chest up, until your thighs are about level with the floor.', 'Stand up by pushing through your whole foot. Squat inside a rack with the safety bars set.'] },
+  { id: 'barbell-bench', name: 'Barbell bench press', muscles: ['Chest', 'Triceps', 'Shoulders'], groups: ['chest', 'arms'],
+    steps: ['Lie with your eyes under the bar, feet flat, shoulder blades pulled together.', 'Lower the bar to your mid-chest, elbows about 45° from your body.', 'Press up until your arms are straight. Use safety bars or ask for a spotter.'] },
+  { id: 'deadlift', name: 'Deadlift', muscles: ['Back', 'Glutes', 'Hamstrings'], groups: ['back', 'legs', 'glutes'],
+    steps: ['Bar over the middle of your feet, shins close to it, hands just outside your legs.', 'Back flat and chest up, push the floor away and stand tall, keeping the bar close to your legs.', 'Lower it the same way: hips back first, then bend your knees.'] },
+  { id: 'romanian-deadlift', name: 'Romanian deadlift', muscles: ['Hamstrings', 'Glutes', 'Lower back'], groups: ['legs', 'glutes'],
+    steps: ['Stand holding a bar or two dumbbells, knees slightly bent.', 'Push your hips back and slide the weight down your thighs, back flat, until you feel a stretch behind your thighs.', 'Squeeze your glutes to stand back up.'] },
+  { id: 'db-bench', name: 'Dumbbell bench press', muscles: ['Chest', 'Triceps', 'Shoulders'], groups: ['chest', 'arms'],
+    steps: ['Lie on a flat bench, a dumbbell in each hand above your chest.', 'Lower them to the sides of your chest, elbows about 45° from your body.', 'Press back up.'] },
+  { id: 'incline-db-press', name: 'Incline dumbbell press', muscles: ['Upper chest', 'Shoulders', 'Triceps'], groups: ['chest', 'shoulders'],
+    steps: ['Set the bench to about 30°. Lie back with a dumbbell in each hand above your chest.', 'Lower them to the sides of your upper chest.', 'Press back up.'] },
+  { id: 'db-shoulder-press', name: 'Dumbbell shoulder press', muscles: ['Shoulders', 'Triceps'], groups: ['shoulders', 'arms'],
+    steps: ['Sit on a bench with back support, dumbbells at shoulder height.', 'Press up until your arms are straight over your head.', 'Lower slowly to your shoulders.'] },
+  { id: 'overhead-press', name: 'Overhead press (barbell)', aka: ['Military press', 'Standing press'], muscles: ['Shoulders', 'Triceps'], groups: ['shoulders', 'arms'],
+    steps: ['Stand with the bar resting at the front of your shoulders, hands just outside them.', 'Squeeze your glutes and abs, press the bar straight up, moving your head back a little as it passes.', 'Lower it back to your shoulders.'] },
+  { id: 'db-row', name: 'Dumbbell row', muscles: ['Upper back (lats)', 'Biceps'], groups: ['back', 'arms'],
+    steps: ['One hand and knee on a bench, back flat, a dumbbell in the other hand.', 'Pull it to your hip, elbow close to your body.', 'Lower until your arm is straight.'] },
+  { id: 'barbell-row', name: 'Barbell row', aka: ['Bent-over row'], muscles: ['Middle back', 'Upper back (lats)', 'Biceps'], groups: ['back', 'arms'],
+    steps: ['Lean forward to about 45° with a flat back, bar hanging at your knees.', 'Pull it to your lower ribs.', 'Lower with control, keeping your back still.'] },
+  { id: 'db-curl', name: 'Dumbbell biceps curl', muscles: ['Biceps'], groups: ['arms'],
+    steps: ['Stand with dumbbells at your sides, palms facing forward.', 'Curl them up without moving your elbows forward.', 'Lower slowly.'] },
+  { id: 'db-lateral-raise', name: 'Dumbbell lateral raise', muscles: ['Shoulders'], groups: ['shoulders'],
+    steps: ['Stand with light dumbbells at your sides.', 'Raise your arms out to the sides up to shoulder height, elbows slightly bent.', 'Lower slowly. Use a light weight: it\'s a small muscle.'] },
+  { id: 'goblet-squat', name: 'Goblet squat', muscles: ['Legs', 'Glutes'], groups: ['legs', 'glutes'],
+    steps: ['Hold one dumbbell upright against your chest.', 'Squat down between your knees, chest up, as low as is comfortable.', 'Stand back up through your whole foot.'] },
+  { id: 'lunge', name: 'Lunges', muscles: ['Legs', 'Glutes'], groups: ['legs', 'glutes'],
+    steps: ['Stand tall with dumbbells at your sides, or no weight at first.', 'Step forward and lower until both knees are bent to about a right angle.', 'Push back to the start. Count reps for each leg.'] },
+  { id: 'hip-thrust', name: 'Hip thrust', muscles: ['Glutes', 'Hamstrings'], groups: ['glutes', 'legs'],
+    steps: ['Sit with your upper back against a bench, a barbell or dumbbell across your hips (use a pad).', 'Feet flat, push through your heels and lift your hips until your body is straight from shoulders to knees.', 'Squeeze your glutes at the top, then lower.'] },
+  { id: 'triceps-pushdown', name: 'Triceps pushdown (cable)', muscles: ['Triceps'], groups: ['arms'],
+    steps: ['On the cable machine, set the pulley high and attach a rope or short bar.', 'Elbows at your sides, push down until your arms are straight.', 'Let it rise until your elbows are at about a right angle.'] },
+  { id: 'face-pull', name: 'Face pull (cable)', muscles: ['Back of shoulders', 'Upper back'], groups: ['shoulders', 'back'],
+    steps: ['On the cable machine, set the pulley at face height and attach the rope.', 'Pull the rope toward your face, hands ending beside your ears, elbows high.', 'Return slowly.'] },
+  { id: 'push-up', name: 'Push-up', type: 'reps', muscles: ['Chest', 'Triceps', 'Shoulders'], groups: ['chest', 'arms'],
+    steps: ['Hands a bit wider than your shoulders, body straight from head to heels.', 'Lower your chest close to the floor.', 'Push back up. Too hard? Put your hands on a bench, or your knees on the floor.'] },
+  { id: 'pull-up', name: 'Pull-up', type: 'reps', muscles: ['Upper back (lats)', 'Biceps'], groups: ['back', 'arms'],
+    steps: ['Hang from the bar, hands a bit wider than your shoulders, palms facing away.', 'Pull until your chin is over the bar.', 'Lower all the way. Too hard? Use the assisted pull-up machine instead.'] },
+  { id: 'crunch', name: 'Crunch', type: 'reps', muscles: ['Abs'], groups: ['core'],
+    steps: ['Lie on your back, knees bent, hands across your chest.', 'Curl your shoulders off the floor, breathing out.', 'Lower slowly.'] },
+  { id: 'hanging-knee-raise', name: 'Hanging knee raise', type: 'reps', muscles: ['Abs'], groups: ['core'],
+    steps: ['Hang from a bar, or use the station with elbow pads.', 'Lift your knees toward your chest without swinging.', 'Lower slowly.'] },
+  { id: 'plank', name: 'Plank', type: 'time', muscles: ['Abs', 'Core'], groups: ['core'],
+    steps: ['Forearms on the floor, elbows under your shoulders.', 'Body in a straight line from head to heels, glutes and abs tight.', 'Hold. Stop when your hips start to sag.'] },
+].map(e => ({ type: 'weight', aka: [], free: true, ...e }));
+
+// ---------- Programs ----------
+// Written for this app following published guidance; not endorsed by these organisations.
+const SOURCES = {
+  acsm: 'American College of Sports Medicine (ACSM): Progression Models in Resistance Training for Healthy Adults. Position stand, Medicine & Science in Sports & Exercise, 2009.',
+  nsca: 'National Strength and Conditioning Association (NSCA): Essentials of Strength Training and Conditioning, 4th edition, 2016.',
+  who: 'World Health Organization (WHO): Guidelines on Physical Activity and Sedentary Behaviour, 2020.',
+};
+const LEVELS = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
+// [exercise, sets, low reps, high reps, rest seconds]. Plank: seconds instead of reps. Cardio: [id, 1, minutes, minutes, 0].
+const X = (id, sets, lo, hi, rest) => ({ id, sets, lo, hi, rest });
+const BASE_RULES = [
+  'Warm up for 5–10 minutes of easy cardio, then do one light set of your first exercise.',
+  'Choose a weight you can lift for the target reps with good form, finishing each set with 1–3 reps still in you.',
+  'When you reach the top of the rep range on every set, go one step heavier next time. The app tells you when.',
+  'Rest at least one day before training the same muscles hard again. Sleep and food are part of the program.',
+];
+const PROGRAMS = [
+{ id: 'first-steps', name: 'First Steps', level: 'beginner', perWeek: 3, weeks: 6, minutes: 45, equipment: 'Machines only',
+  goal: 'Learn the machines, build the habit and a base of strength.',
+  who: 'Complete beginners, or anyone back after a long break.',
+  about: 'Two full-body workouts on machines that guide the movement, so you can focus on doing it right. Alternate A and B on three days a week with a rest day between (for example Monday, Wednesday, Friday).',
+  ramp: { weeks: 2, sets: 2 },
+  rules: ['Weeks 1–2: two sets of each exercise. From week 3: three sets.', 'Use light weights the first week. You are learning, not testing.', ...BASE_RULES.slice(1)],
+  next: 'foundations', sources: ['acsm', 'nsca'],
+  days: [
+    { name: 'Workout A', ex: [X('leg-press', 3, 12, 15, 90), X('chest-press', 3, 12, 15, 90), X('lat-pulldown', 3, 12, 15, 90), X('seated-leg-curl', 3, 12, 15, 75), X('shoulder-press', 3, 12, 15, 75), X('plank', 2, 20, 30, 60), X('treadmill', 1, 10, 10, 0)] },
+    { name: 'Workout B', ex: [X('leg-press', 3, 12, 15, 90), X('machine-row', 3, 12, 15, 90), X('pec-deck', 3, 12, 15, 75), X('leg-extension', 3, 12, 15, 75), X('triceps-press', 3, 12, 15, 75), X('ab-crunch', 2, 12, 15, 60), X('elliptical', 1, 10, 10, 0)] },
+  ] },
+{ id: 'fit-healthy', name: 'Fit & Healthy', level: 'beginner', perWeek: 5, weeks: 8, minutes: 35, equipment: 'Machines and cardio',
+  goal: 'Meet the WHO weekly activity guideline: muscle work twice a week plus 150 minutes of cardio.',
+  who: 'Beginners who want health, energy and fitness more than big muscles.',
+  about: 'Two short strength workouts and three 30-minute cardio sessions a week. Cardio should feel moderate: breathing harder, but you can still talk. Swap the cardio machine for any one you like.',
+  rules: ['Cardio at a moderate pace: you can talk but not sing.', 'Every week, add a few minutes or a little speed to one cardio session.', ...BASE_RULES.slice(1, 3)],
+  next: 'foundations', sources: ['who', 'acsm'],
+  days: [
+    { name: 'Strength A', ex: [X('leg-press', 2, 10, 15, 75), X('chest-press', 2, 10, 15, 75), X('cable-row', 2, 10, 15, 75), X('hip-machine', 2, 12, 15, 60), X('plank', 2, 20, 40, 60)] },
+    { name: 'Cardio', ex: [X('treadmill', 1, 30, 30, 0)] },
+    { name: 'Strength B', ex: [X('leg-extension', 2, 10, 15, 75), X('seated-leg-curl', 2, 10, 15, 75), X('lat-pulldown', 2, 10, 15, 75), X('shoulder-press', 2, 10, 15, 75), X('back-extension', 2, 10, 15, 60)] },
+    { name: 'Cardio', ex: [X('elliptical', 1, 30, 30, 0)] },
+    { name: 'Cardio', ex: [X('rowing-machine', 1, 30, 30, 0)] },
+  ] },
+{ id: 'foundations', name: 'Full Body Foundations', level: 'beginner', perWeek: 3, weeks: 8, minutes: 55, equipment: 'Machines and dumbbells',
+  goal: 'Get stronger all over and learn the main free-weight movements.',
+  who: 'After First Steps, or if you already know your way around the machines.',
+  about: 'Full-body workouts three days a week, alternating A and B. Dumbbells come in alongside the machines, so you learn to balance and control a free weight.',
+  rules: BASE_RULES, next: 'upper-lower', sources: ['acsm', 'nsca'],
+  days: [
+    { name: 'Workout A', ex: [X('goblet-squat', 3, 8, 12, 120), X('db-bench', 3, 8, 12, 120), X('lat-pulldown', 3, 8, 12, 90), X('romanian-deadlift', 3, 8, 12, 120), X('db-lateral-raise', 2, 12, 15, 60), X('plank', 3, 30, 45, 60)] },
+    { name: 'Workout B', ex: [X('leg-press', 3, 10, 12, 120), X('db-shoulder-press', 3, 8, 12, 90), X('db-row', 3, 8, 12, 90), X('lying-leg-curl', 3, 10, 12, 75), X('db-curl', 2, 10, 12, 60), X('triceps-pushdown', 2, 10, 12, 60), X('crunch', 2, 12, 15, 60)] },
+  ] },
+{ id: 'upper-lower', name: 'Upper / Lower', level: 'intermediate', perWeek: 4, weeks: 8, minutes: 65, equipment: 'Barbell, dumbbells, machines',
+  goal: 'Build strength and muscle with more training per muscle each week.',
+  who: '6+ months of regular training, comfortable with squats, presses and rows.',
+  about: 'Four days a week: upper body, lower body, rest, upper, lower. Day 1 and 2 are heavier with fewer reps; day 3 and 4 use more reps. Big lifts get longer rests.',
+  rules: [...BASE_RULES, 'Rest 2–3 minutes after heavy barbell sets, 1–1.5 minutes after the rest.'], next: 'ppl', sources: ['acsm', 'nsca'],
+  days: [
+    { name: 'Upper 1 (heavy)', ex: [X('barbell-bench', 4, 6, 8, 150), X('barbell-row', 4, 6, 8, 150), X('overhead-press', 3, 8, 10, 120), X('lat-pulldown', 3, 8, 10, 90), X('db-curl', 2, 10, 12, 60), X('triceps-pushdown', 2, 10, 12, 60)] },
+    { name: 'Lower 1 (heavy)', ex: [X('barbell-squat', 4, 6, 8, 180), X('romanian-deadlift', 3, 8, 10, 150), X('leg-press', 3, 10, 12, 120), X('seated-leg-curl', 3, 10, 12, 75), X('calf-raise', 3, 10, 15, 60), X('plank', 3, 30, 60, 60)] },
+    { name: 'Upper 2 (volume)', ex: [X('incline-db-press', 3, 8, 12, 120), X('cable-row', 3, 8, 12, 90), X('db-shoulder-press', 3, 8, 12, 90), X('assisted-pullup', 3, 6, 10, 90), X('pec-deck', 2, 12, 15, 60), X('face-pull', 2, 12, 15, 60)] },
+    { name: 'Lower 2 (volume)', ex: [X('deadlift', 3, 5, 5, 180), X('lunge', 3, 8, 12, 90), X('leg-extension', 3, 10, 15, 75), X('lying-leg-curl', 3, 10, 15, 75), X('hip-thrust', 3, 8, 12, 90), X('hanging-knee-raise', 3, 10, 15, 60)] },
+  ] },
+{ id: 'ppl', name: 'Push / Pull / Legs', level: 'advanced', perWeek: 6, weeks: 8, minutes: 70, equipment: 'Full gym',
+  goal: 'Maximise muscle and strength with high weekly volume.',
+  who: '1+ year of consistent training, solid technique on the big lifts, good recovery.',
+  about: 'Push (chest, shoulders, triceps), Pull (back, biceps) and Legs, each twice a week: Push, Pull, Legs, Push, Pull, Legs, rest. Short on time? Run it once through, three days a week.',
+  rules: [...BASE_RULES, 'Every 6–8 weeks, take an easier week: same exercises, about half the sets.'], next: null, sources: ['acsm', 'nsca'],
+  days: [
+    { name: 'Push', ex: [X('barbell-bench', 4, 5, 8, 180), X('overhead-press', 3, 6, 10, 150), X('incline-db-press', 3, 8, 12, 90), X('db-lateral-raise', 4, 12, 15, 60), X('pec-deck', 3, 12, 15, 60), X('triceps-pushdown', 3, 10, 15, 60)] },
+    { name: 'Pull', ex: [X('deadlift', 3, 4, 6, 180), X('pull-up', 4, 6, 10, 120), X('barbell-row', 3, 6, 10, 120), X('cable-row', 3, 10, 12, 90), X('face-pull', 3, 12, 15, 60), X('db-curl', 3, 10, 12, 60)] },
+    { name: 'Legs', ex: [X('barbell-squat', 4, 5, 8, 180), X('romanian-deadlift', 3, 8, 10, 150), X('leg-press', 3, 10, 12, 120), X('seated-leg-curl', 3, 10, 12, 75), X('calf-raise', 4, 10, 15, 60), X('hanging-knee-raise', 3, 10, 15, 60)] },
+  ] },
+];
+const progById = id => PROGRAMS.find(p => p.id === id);
+
 const FREE_BY = Object.fromEntries(FREE.map(e => [e.id, e]));
 const exById = id => byId[id] || FREE_BY[id] || store.custom.find(c => c.id === id);
 const typeOf = e => !e ? 'weight' : e.cardio ? 'cardio' : (e.type || 'weight');
@@ -615,7 +724,7 @@ const assist = e => e && e.id === 'assisted-pullup';
 
 // ---------- Storage (this phone only) ----------
 const KEY = 'gymguide.v1';
-const DEFAULTS = () => ({ workouts: [], custom: [], active: null, settings: { unit: 'kg', rest: 90 } });
+const DEFAULTS = () => ({ workouts: [], custom: [], active: null, program: null, settings: { unit: 'kg', rest: 90 } });
 function load() {
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.workouts)) return { ...DEFAULTS(), ...s, settings: { ...DEFAULTS().settings, ...s.settings } }; } catch (e) {}
   return DEFAULTS();
@@ -714,6 +823,81 @@ function streakWeeks() {
   return n;
 }
 
+
+// ---------- Programs: helpers and screens ----------
+function progWeek() { const P = store.program; return P ? Math.floor((weekStart(Date.now()) - weekStart(P.start)) / (7 * 864e5)) + 1 : 0; }
+function targetFor(p, e) {
+  const ramp = p.ramp && progWeek() <= p.ramp.weeks && e.sets > 1 ? Math.min(e.sets, p.ramp.sets) : e.sets;
+  return { sets: ramp, r: [e.lo, e.hi], rest: e.rest };
+}
+function fmtTarget(type, t) {
+  const rng = t.r[0] === t.r[1] ? String(t.r[0]) : `${t.r[0]}–${t.r[1]}`;
+  if (type === 'cardio') return `${t.r[0]} min`;
+  if (type === 'time') return `${t.sets} × ${rng} s`;
+  return `${t.sets} × ${rng}${type === 'reps' || type === 'weight' ? ' reps' : ''}`;
+}
+const fmtRest = s => s >= 60 ? (s % 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min` : `${s / 60} min`) : `${s} s`;
+// Double progression: top of the range on every set last time -> go up a step.
+function coachHint(it, ex, type, last) {
+  if (!it.target || !last) return '';
+  const hi = it.target.r[1], ls = last.it.sets, all = ls.length >= it.target.sets;
+  if (assist(ex)) return all && ls.every(s => s.r >= hi) ? `You got ${hi} reps on every set last time. Lower the help weight one step today.` : '';
+  if (type === 'weight' && all && ls.every(s => s.r >= hi)) return `You got ${hi} reps on every set last time. Go one step heavier today (${unit() === 'lb' ? '5–10 lb' : '2.5–5 kg'}).`;
+  if (type === 'time' && all && ls.every(s => s.s >= hi)) return `You held ${hi} s on every set last time. Add 10–15 seconds today.`;
+  if (type === 'reps' && all && ls.every(s => s.r >= hi)) return `You got ${hi} reps on every set last time. Slow the reps down or add a set.`;
+  return '';
+}
+function startProgramDay(i) {
+  const p = progById(store.program.id), d = p.days[i];
+  startWorkout(d.ex.filter(e => exById(e.id)).map(e => newItem(e.id, targetFor(p, e))));
+  store.active.program = { id: p.id, day: i }; save();
+}
+const progLabel = w => { const p = w.program && progById(w.program.id); return p ? `${p.name} · ${p.days[w.program.day]?.name || ''}` : ''; };
+function programCard() {
+  const P = store.program, p = P && progById(P.id); if (!p) return '';
+  const wk = progWeek(), d = p.days[P.next % p.days.length], over = wk > p.weeks, nxt = p.next && progById(p.next);
+  const others = p.days.map((x, i) => ({ x, i })).filter(o => o.i !== P.next % p.days.length && !(o.x.name === d.name));
+  return `<div class="card hello"><div class="q"><div class="step">Your program · ${over ? `${p.weeks} weeks done` : `Week ${wk} of ${p.weeks}`}</div><h2>${esc(p.name)}</h2></div>
+    ${over ? `<p class="howto">You've finished the ${p.weeks} weeks. Keep going with it, or move up${nxt ? ` to <button class="link" data-p="${nxt.id}">${esc(nxt.name)} ›</button>` : ''}.</p>` : ''}
+    <p class="muted">Next: <b style="color:var(--ink)">${esc(d.name)}</b> · ${plural(d.ex.length, 'exercise')} · about ${d.ex.length === 1 ? d.ex[0].lo : p.minutes} min</p>
+    <button class="btn pri" data-act="start-day" data-day="${P.next % p.days.length}">Start ${esc(d.name)}</button>
+    ${others.length ? `<div class="chips">${others.map(o => `<button class="chip" data-act="start-day" data-day="${o.i}">${esc(o.x.name)}</button>`).join('')}</div>` : ''}
+    <button class="link" data-p="${p.id}">See the program ›</button></div>`;
+}
+function progCard(p) {
+  const following = store.program && store.program.id === p.id;
+  return `<button class="card wk" data-p="${p.id}"><span class="d">${esc(p.name)}<span>${following ? '<span class="badge">Following</span>' : ''}</span></span>
+    <span class="m">${p.perWeek} days a week · ${p.weeks} weeks · ${esc(p.equipment)}</span><span class="m" style="color:var(--ink)">${esc(p.goal)}</span></button>`;
+}
+function renderPrograms() {
+  const v = $('#view-programs'), lv = app.level || 'all';
+  const list = PROGRAMS.filter(p => lv === 'all' || p.level === lv);
+  v.innerHTML = `<p class="muted">Ready-made plans from first steps to advanced, built on training guidelines from the ACSM, NSCA and WHO. Pick one and the app sets up each workout for you.</p>
+    <div class="chips">${[['all', 'All'], ...Object.entries(LEVELS)].map(([k, n]) => `<button class="chip" data-level="${k}" aria-pressed="${lv === k}">${n}</button>`).join('')}</div>
+    ${Object.keys(LEVELS).map(l => { const ps = list.filter(p => p.level === l); return ps.length ? `<h2 class="sec">${LEVELS[l]}</h2>${ps.map(progCard).join('')}` : ''; }).join('')}
+    <section class="card sect"><h3>${SVG.steps}How every program works</h3><ul>${BASE_RULES.map(r => `<li>${esc(r)}</li>`).join('')}</ul></section>
+    <p class="note">General guidance, not medical advice. If you have a health condition, an injury or are pregnant, check with a doctor first.</p>`;
+}
+function renderProgram(id) {
+  const p = progById(id), v = $('#view-program');
+  if (!p) { v.innerHTML = '<p class="empty">Program not found.</p>'; return; }
+  const following = store.program && store.program.id === id;
+  const done = store.workouts.filter(w => w.program && w.program.id === id).length;
+  const row = e => { const ex = exById(e.id), type = typeOf(ex); return `<button class="pick" data-m="${esc(e.id)}">${ex.art ? `<span class="th">${art(ex)}</span>` : `<span class="ph">${type === 'reps' || type === 'time' ? 'Body' : 'Free'}</span>`}<div><b>${esc(ex.name)}</b><span>${esc(fmtTarget(type, { sets: e.sets, r: [e.lo, e.hi] }))}${e.rest ? ' · rest ' + fmtRest(e.rest) : ''}</span></div></button>`; };
+  const seen = new Set();
+  v.innerHTML = `<article class="card hello"><div class="tags"><span class="tag">${LEVELS[p.level]}</span></div><h2>${esc(p.name)}</h2><p>${esc(p.goal)}</p>
+      <dl class="sum"><div><dt>Days a week</dt><dd>${p.perWeek}</dd></div><div><dt>Weeks</dt><dd>${p.weeks}</dd></div><div><dt>Per workout</dt><dd>~${p.minutes} min</dd></div></dl>
+      <p class="muted small"><b style="color:var(--ink)">For:</b> ${esc(p.who)}<br><b style="color:var(--ink)">Equipment:</b> ${esc(p.equipment)}</p>
+      ${following ? `<p class="muted small">You're following this program · week ${Math.min(progWeek(), p.weeks)} of ${p.weeks} · ${plural(done, 'workout')} done</p><button class="btn pri" data-act="go-workout">Go to next workout</button><button class="btn bad" data-act="stop-program">Stop following</button>`
+        : `<button class="btn pri" data-act="follow" data-id="${p.id}">Start this program</button>`}</article>
+    <section class="card sect"><h3>${SVG.spot}How it's set up</h3><p>${esc(p.about)}</p></section>
+    <section class="card sect"><h3>${SVG.steps}Rules</h3><ul>${p.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul></section>
+    ${p.days.filter(d => { const k = d.name + d.ex.map(e => e.id).join(); if (seen.has(k)) return false; seen.add(k); return true; }).map(d => `<h2 class="sec">${esc(d.name)}</h2><div class="card">${d.ex.map(row).join('')}</div>`).join('')}
+    <section class="card sect"><h3>${SVG.also}Where this comes from</h3><p class="small">Sets, reps, rest times, training days and the way weight goes up follow these guidelines:</p><ul class="small">${p.sources.map(s => `<li>${esc(SOURCES[s])}</li>`).join('')}</ul>
+      <p class="muted small">The program itself was written for this app. It isn't made or endorsed by these organisations.</p></section>
+    <p class="note">General guidance, not medical advice. Stop if something hurts and ask a qualified coach to check your technique.</p>`;
+}
+
 // ---------- State and routing ----------
 const app = { pos: null, move: null, group: 'all', query: '', tab: 'workout', edit: null, justSaved: null, metric: {}, addFor: 'active' };
 const $ = s => document.querySelector(s);
@@ -732,28 +916,35 @@ function startWorkout(items = []) {
   store.active = { id: uid(), start: Date.now(), items };
   save();
 }
-function newItem(exId) {
+function newItem(exId, target) {
   const ex = exById(exId), type = typeOf(ex), last = historyOf(exId).pop();
-  const sets = last ? last.it.sets.map(s => ({ ...s, done: false })) : Array.from({ length: type === 'cardio' ? 1 : 3 }, () => ({ ...blankSet(type), done: false }));
-  return { ex: exId, sets };
+  const n = target ? target.sets : last ? last.it.sets.length : type === 'cardio' ? 1 : 3;
+  const blank = () => { const b = blankSet(type); if (target && type === 'cardio') b.min = target.r[0]; return b; };
+  const sets = Array.from({ length: n }, (_, i) => {
+    const src = last && (last.it.sets[i] || last.it.sets[last.it.sets.length - 1]);
+    return { ...(src || blank()), done: false };
+  });
+  return target ? { ex: exId, sets, target } : { ex: exId, sets };
 }
 function renderWorkout() {
   const v = $('#view-workout'), W = store.active;
   if (!W) {
     const ws = sortedWorkouts(), last = ws[ws.length - 1];
     const thisWeek = store.workouts.filter(w => w.start >= weekStart(Date.now())).length;
-    v.innerHTML = `<div class="card hello"><h2>Ready to train?</h2>
+    const P = store.program && progById(store.program.id);
+    v.innerHTML = `${programCard()}<div class="card hello"><h2>${P ? 'Or train your own way' : 'Ready to train?'}</h2>
         <p class="muted">Add exercises as you go and tick each set when it's done. Your workouts stay on this phone.</p>
-        <button class="btn pri" data-act="start">Start workout</button>
+        <button class="btn ${P ? 'sec' : 'pri'}" data-act="start">Start ${P ? 'an empty' : ''} workout</button>
+        ${P ? '' : '<button class="btn sec" data-go="programs">Follow a program<small>Beginner to advanced plans that set up each workout for you</small></button>'}
         ${last ? `<button class="btn sec" data-act="repeat">Repeat last workout<small>${esc(fmtDay(last.start))} · ${esc(last.items.map(it => exById(it.ex)?.name || 'Exercise').join(', '))}</small></button>` : ''}
       </div>
       ${ws.length ? `<dl class="tiles"><div class="tile"><dt>This week</dt><dd>${thisWeek}<small>${thisWeek === 1 ? 'workout' : 'workouts'}</small></dd></div>
         <div class="tile"><dt>Weeks in a row</dt><dd>${streakWeeks()}</dd></div></dl>
-        <h2 class="sec">Recent</h2>${ws.slice(-3).reverse().map(wkCard).join('')}` : `<div class="howto"><b>New to the gym?</b><ol><li>Tap <b>Start workout</b>.</li><li>Add a machine. Not sure of its name? Use the Machines tab.</li><li>Enter the weight and reps, tick each set. A rest timer starts.</li><li>Tap <b>Finish</b>. Your progress builds up in the Progress tab.</li></ol></div>`}`;
+        <h2 class="sec">Recent</h2>${ws.slice(-3).reverse().map(wkCard).join('')}` : `<div class="howto"><b>New to the gym?</b><ol><li>Pick a program in <b>Programs</b>, or tap <b>Start workout</b>.</li><li>Add a machine. Not sure of its name? Use the Machines tab.</li><li>Enter the weight and reps, tick each set. A rest timer starts.</li><li>Tap <b>Finish</b>. Your progress builds up in the Progress tab.</li></ol></div>`}`;
     return;
   }
   const done = W.items.reduce((a, it) => a + it.sets.filter(s => s.done).length, 0);
-  v.innerHTML = `<div class="card sess-head"><div><div class="clock" id="elapsed">${clock(Date.now() - W.start)}</div><div class="muted">Started ${esc(fmtTime(W.start))} · ${plural(done, 'set')} done</div></div>
+  v.innerHTML = `<div class="card sess-head"><div><div class="clock" id="elapsed">${clock(Date.now() - W.start)}</div><div class="muted">${W.program ? esc(progLabel(W)) + '<br>' : ''}Started ${esc(fmtTime(W.start))} · ${plural(done, 'set')} done</div></div>
       <button class="btn pri small" data-act="finish">Finish</button></div>
     <div id="finish-msg"></div>
     ${W.items.map((it, i) => itemCard(it, i, 'active')).join('')}
@@ -768,25 +959,29 @@ function itemCard(it, i, mode) {
   const cols = type === 'weight' ? [assist(ex) ? `Help ${unit()}` : unit(), 'Reps'] : type === 'reps' ? ['Reps'] : type === 'time' ? ['Seconds'] : ['Minutes', dist()];
   const one = cols.length === 1, ticks = mode === 'active';
   const f = (s, j, k) => {
-    if (type === 'weight') return k === 0 ? inp(j, 'w', wIn(s.w), 'decimal') : inp(j, 'r', s.r ?? '', 'numeric');
-    if (type === 'reps') return inp(j, 'r', s.r ?? '', 'numeric');
-    if (type === 'time') return inp(j, 's', s.s ?? '', 'numeric');
+    const ph = it.target ? (it.target.r[0] === it.target.r[1] ? String(it.target.r[0]) : it.target.r.join('–')) : '';
+    if (type === 'weight') return k === 0 ? inp(j, 'w', wIn(s.w), 'decimal') : inp(j, 'r', s.r ?? '', 'numeric', ph);
+    if (type === 'reps') return inp(j, 'r', s.r ?? '', 'numeric', ph);
+    if (type === 'time') return inp(j, 's', s.s ?? '', 'numeric', ph);
     return k === 0 ? inp(j, 'min', s.min ?? '', 'decimal') : inp(j, 'km', dIn(s.km), 'decimal');
   };
   const row = (s, j) => `<div class="set-row${one ? ' one' : ''}${s.done ? ' done' : ''}${ticks ? '' : ' nt'}" data-s="${j}"><span class="set-n">${j + 1}</span>${cols.map((c, k) => f(s, j, k)).join('')}${ticks ? `<button class="tick" data-act="tick" aria-pressed="${!!s.done}" aria-label="Set ${j + 1} done">${ICONS.check}</button>` : '<span></span>'}</div>`;
   return `<section class="card ex" data-i="${i}">
     <div class="ex-head"><button class="ex-name" data-m="${esc(it.ex)}">${esc(ex ? ex.name : 'Deleted exercise')}</button><button class="ex-x" data-act="remove-ex" aria-label="Remove ${esc(ex ? ex.name : 'exercise')}">${ICONS.x}</button></div>
+    ${it.target ? `<p class="last"><b style="color:var(--ink)">Target: ${esc(fmtTarget(type, it.target))}</b>${it.target.rest ? ` · rest ${esc(fmtRest(it.target.rest))}` : ''}</p>` : ''}
+    ${(h => h ? `<p class="howto" style="padding:10px 12px">${esc(h)}</p>` : '')(mode === 'active' ? coachHint(it, ex, type, last) : '')}
     <p class="last">${last ? `Last time, ${esc(fmtShort(last.w.start))}: ${esc(setsText(type, last.it.sets))}` : type === 'weight' && !assist(ex) ? 'First time: start light and learn the movement.' : assist(ex) ? 'First time: more help weight makes it easier.' : 'First time.'}</p>
     <div class="sets"><div class="set-row h${one ? ' one' : ''}"><span>Set</span>${cols.map(c => `<span>${esc(c)}</span>`).join('')}<span>${ticks ? 'Done' : ''}</span></div>${it.sets.map(row).join('')}</div>
     <div class="ex-foot"><button data-act="add-set">+ Add set</button>${it.sets.length > 1 ? '<button data-act="del-set">Remove last set</button>' : ''}</div>
   </section>`;
 }
-const inp = (j, k, v, mode) => `<input data-f="${k}" inputmode="${mode}" enterkeyhint="next" value="${esc(v)}" aria-label="${k}">`;
+const inp = (j, k, v, mode, ph = '') => `<input data-f="${k}" inputmode="${mode}" enterkeyhint="next" value="${esc(v)}" aria-label="${k}"${ph ? ` placeholder="${esc(ph)}"` : ''}>`;
 
 // Rest timer
 const rest = { end: 0, t: null };
-function startRest() {
-  const sec = store.settings.rest; if (!sec) return;
+function startRest(target) {
+  if (!store.settings.rest) return;
+  const sec = target || store.settings.rest;
   rest.end = Date.now() + sec * 1000; rest.over = false; $('#rest').hidden = false; $('#rest').classList.remove('over'); tickRest();
   clearInterval(rest.t); rest.t = setInterval(tickRest, 250);
 }
@@ -805,6 +1000,8 @@ function finishWorkout() {
   const items = W.items.map(it => ({ ex: it.ex, sets: it.sets.filter(s => s.done && validSet(typeOf(exById(it.ex)), s)).map(({ done, ...s }) => s) })).filter(it => it.sets.length);
   if (!items.length) { $('#finish-msg').innerHTML = '<p class="msg">No sets are ticked yet. Tick ✓ the sets you did, or discard the workout.</p>'; window.scrollTo(0, 0); return; }
   const w = { id: W.id, start: W.start, end: Date.now(), items };
+  if (W.program) { w.program = W.program; const p = progById(W.program.id);
+    if (p && store.program && store.program.id === p.id) store.program.next = (W.program.day + 1) % p.days.length; }
   store.workouts.push(w); store.active = null; save(); stopRest();
   app.justSaved = w.id;
   location.replace('#w/' + w.id);
@@ -813,7 +1010,7 @@ function finishWorkout() {
 // ---------- History ----------
 function wkCard(w) {
   const names = w.items.map(it => exById(it.ex)?.name || 'Exercise');
-  return `<button class="card wk" data-w="${w.id}"><span class="d">${esc(fmtDay(w.start))}<span>${esc(fmtDur(w.end - w.start))}</span></span>
+  return `<button class="card wk" data-w="${w.id}"><span class="d">${esc(fmtDay(w.start))}<span>${esc(fmtDur(w.end - w.start))}</span></span>${w.program ? `<span class="m" style="color:var(--accent);font-weight:600">${esc(progLabel(w))}</span>` : ''}
     <span class="m">${esc(names.slice(0, 4).join(', '))}${names.length > 4 ? ` +${names.length - 4}` : ''}</span>
     <span class="m">${plural(setCount(w), 'set')}${workoutVolume(w) ? ` · ${fmtBig(unit() === 'lb' ? workoutVolume(w) * LB : workoutVolume(w))} ${unit()} lifted` : ''}</span></button>`;
 }
@@ -1016,7 +1213,7 @@ function renderMachine(id) {
   const inWorkout = store.active && store.active.items.some(it => it.ex === id);
   const action = store.active ? (inWorkout ? '<button class="btn sec" data-act="go-workout">In today\'s workout ›</button>' : `<button class="btn pri" data-act="add-this" data-id="${esc(id)}">Add to today's workout</button>`)
     : `<button class="btn pri" data-act="start-this" data-id="${esc(id)}">Start a workout with this</button>`;
-  const guide = !!m.steps;
+  const guide = !!m.art;
   v.innerHTML = `<article class="card hero">${guide ? art(m) : ''}<div class="body">
       <h2>${esc(m.name)}</h2>
       ${m.aka && m.aka.length ? `<p class="aka">Also called: ${esc(m.aka.join(' · '))}</p>` : ''}
@@ -1032,7 +1229,7 @@ function renderMachine(id) {
     ${sect('avoid', 'Avoid', m.avoid, false, 'warn')}
     ${sect('also', 'You can also use it for', m.also, false)}
     <section class="card sect start"><h3>${SVG.start}Beginner start</h3><p>${esc(m.start || START)}</p></section>
-    <p class="note">Stop if something hurts (sharp or joint pain, not muscle effort). Ask gym staff to show you the machine the first time.</p>` : ''}`;
+    <p class="note">Stop if something hurts (sharp or joint pain, not muscle effort). Ask gym staff to show you the machine the first time.</p>` : sect('steps', 'How to do it', m.steps, true)}`;
   renderExProgress(m);
 }
 function renderExProgress(m) {
@@ -1064,7 +1261,7 @@ function renderAdd() {
   if (!T) { location.replace('#workout'); return; }
   const inT = new Set(T.items.map(it => it.ex));
   const recentIds = [...new Set(sortedWorkouts().reverse().flatMap(w => w.items.map(it => it.ex)))].filter(exById).slice(0, 8);
-  const row = e => `<button class="pick" data-pick="${esc(e.id)}">${e.steps ? `<span class="th">${art(e)}</span>` : `<span class="ph">${e.custom ? 'Mine' : typeOf(e) === 'reps' || typeOf(e) === 'time' ? 'Body' : 'Free'}</span>`}<div><b>${esc(e.name)}</b><span>${esc((e.muscles || []).join(', ') || typeName(typeOf(e)))}</span></div>${inT.has(e.id) ? '<em>Added</em>' : ''}</button>`;
+  const row = e => `<button class="pick" data-pick="${esc(e.id)}">${e.art ? `<span class="th">${art(e)}</span>` : `<span class="ph">${e.custom ? 'Mine' : typeOf(e) === 'reps' || typeOf(e) === 'time' ? 'Body' : 'Free'}</span>`}<div><b>${esc(e.name)}</b><span>${esc((e.muscles || []).join(', ') || typeName(typeOf(e)))}</span></div>${inT.has(e.id) ? '<em>Added</em>' : ''}</button>`;
   const sec = (title, list) => list.length ? `<h2 class="sec">${title}</h2><div class="card">${list.map(row).join('')}</div>` : '';
   const listHtml = () => { const q = (app.addQ || '').trim().toLowerCase(); return q
     ? sec('Results', [...MACHINES, ...FREE, ...store.custom].filter(e => matchQ(e, q))) || `<p class="empty">Nothing found. Create it below.</p>`
@@ -1126,8 +1323,8 @@ function importBackup(e) {
 }
 
 // ---------- Navigation ----------
-const MAIN = ['workout', 'history', 'progress', 'machines'];
-const TITLES = { workout: 'Workout', history: 'History', progress: 'Progress', machines: 'Machines', identify: 'What\'s this machine?', add: 'Add exercise', settings: 'Settings' };
+const MAIN = ['workout', 'progress', 'programs', 'history', 'machines'];
+const TITLES = { programs: 'Programs', workout: 'Workout', history: 'History', progress: 'Progress', machines: 'Machines', identify: 'What\'s this machine?', add: 'Add exercise', settings: 'Settings' };
 const scrollMemo = {};
 let navDepth = 0;
 function show(view) {
@@ -1140,11 +1337,12 @@ function show(view) {
 function route() {
   const h = location.hash.slice(1) || 'workout';
   let view = h.split('/')[0], arg = h.slice(view.length + 1);
-  if (view === 'm') { renderMachine(arg); show('machine'); $('#title').textContent = exById(arg)?.name || 'Exercise'; }
+  if (view === 'p') { renderProgram(arg); show('program'); $('#title').textContent = progById(arg)?.name || 'Program'; }
+  else if (view === 'm') { renderMachine(arg); show('machine'); $('#title').textContent = exById(arg)?.name || 'Exercise'; }
   else if (view === 'w') { renderSession(arg); show('session'); const w = store.workouts.find(x => x.id === arg); $('#title').textContent = w ? fmtDay(w.start) : 'Workout'; }
   else {
     if (!TITLES[view]) view = 'workout';
-    ({ workout: renderWorkout, history: renderHistory, progress: renderProgress, machines: renderMachines, identify: renderIdentify, add: renderAdd, settings: renderSettings })[view]();
+    ({ programs: renderPrograms, workout: renderWorkout, history: renderHistory, progress: renderProgress, machines: renderMachines, identify: renderIdentify, add: renderAdd, settings: renderSettings })[view]();
     show(view); $('#title').textContent = view === 'add' && app.addFor === 'edit' ? 'Add to this workout' : TITLES[view];
   }
   window.scrollTo(0, scrollMemo[h] || 0);
@@ -1169,6 +1367,8 @@ document.addEventListener('click', e => {
   const act = t.dataset.act;
   if (t.dataset.m) return go('#m/' + t.dataset.m);
   if (t.dataset.w) return go('#w/' + t.dataset.w);
+  if (t.dataset.p) return go('#p/' + t.dataset.p);
+  if (t.dataset.level) { app.level = t.dataset.level; return renderPrograms(); }
   if (t.dataset.pick) return pick(t.dataset.pick);
   if (t.dataset.view) {
     if (t.dataset.view === 'machines' && app.tab === 'machines' && $('#view-machines').hidden === false) return window.scrollTo(0, 0);
@@ -1188,6 +1388,11 @@ document.addEventListener('click', e => {
   const ctx = itemFrom(t);
   switch (act) {
     case 'start': startWorkout(); renderWorkout(); break;
+    case 'start-day': startProgramDay(+t.dataset.day); renderWorkout(); window.scrollTo(0, 0); break;
+    case 'follow': { const p = progById(t.dataset.id), cur = store.program && progById(store.program.id);
+      if (cur && !confirm(`Stop following ${cur.name} and start ${p.name}? Your past workouts stay.`)) break;
+      store.program = { id: p.id, start: Date.now(), next: 0 }; save(); toast(`Started ${p.name}`); navDepth = 0; location.hash = '#workout'; break; }
+    case 'stop-program': if (confirm('Stop following this program? Your past workouts stay.')) { store.program = null; save(); renderProgram(location.hash.slice(3)); } break;
     case 'repeat': { const l = sortedWorkouts().pop(); startWorkout(l.items.filter(it => exById(it.ex)).map(it => newItem(it.ex))); renderWorkout(); break; }
     case 'repeat-this': { if (store.active && !confirm('You already have a workout going. Add these exercises to it?')) break;
       const w = store.workouts.find(x => x.id === location.hash.slice(3)); const items = w.items.filter(it => exById(it.ex)).map(it => newItem(it.ex));
@@ -1205,7 +1410,7 @@ document.addEventListener('click', e => {
       if (!s.done && !validSet(type, s)) { const empty = [...row.querySelectorAll('input')].find(x => num(x.value) == null || (x.dataset.f !== 'w' && x.dataset.f !== 'km' && num(x.value) <= 0)) || row.querySelector('input'); empty.classList.add('bad'); empty.focus(); break; }
       s.done = !s.done; save(); rerenderCard(ctx);
       const head = document.querySelector('#view-workout .sess-head .muted'); if (head) head.textContent = `Started ${fmtTime(store.active.start)} · ${plural(store.active.items.reduce((a, it) => a + it.sets.filter(x => x.done).length, 0), 'set')} done`;
-      if (s.done) startRest(); break; }
+      if (s.done) startRest(ctx.it.target && ctx.it.target.rest); break; }
     case 'add-set': { const type = typeOf(exById(ctx.it.ex)), prev = ctx.it.sets[ctx.it.sets.length - 1];
       const s = prev ? { ...prev, done: ctx.W === app.edit } : { ...blankSet(type), done: ctx.W === app.edit }; if (ctx.W !== app.edit) s.done = false;
       ctx.it.sets.push(s); save(); rerenderCard(ctx); break; }
@@ -1240,5 +1445,5 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
 window.addEventListener('scroll', () => $('#top').classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 route();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
-window.GG = { MACHINES, FREE, app, get store() { return store; }, set store(s) { store = s; }, save, stats, records };
+window.GG = { MACHINES, FREE, PROGRAMS, app, get store() { return store; }, set store(s) { store = s; }, save, stats, records };
 </script>
