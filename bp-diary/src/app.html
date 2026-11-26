@@ -137,7 +137,11 @@ h2.sec { margin: 10px 0 0; font-size: .78rem; font-weight: 700; letter-spacing: 
 .item label, .item .lbl { font-weight: 500; }
 .item .hint { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; }
 select, input[type="text"], input[type="datetime-local"], textarea { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
-select { max-width: 55%; }
+select { max-width: 55%; text-overflow: ellipsis; }
+.list { grid-template-columns: minmax(0, 1fr); }
+.item { min-width: 0; }
+.item > label, .item > .lbl { flex: 1 1 auto; min-width: 0; }
+.item > select, .item > input { flex: 0 1 auto; min-width: 0; max-width: 52%; }
 .btn { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 600; background: var(--surface-2); color: var(--ink); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); }
 .btn.danger { color: var(--c-stage2); background: color-mix(in srgb, var(--c-stage2) 10%, var(--surface)); }
@@ -217,30 +221,30 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 
 <header class="top" id="top">
   <div class="wrap">
-    <h1>BP Diary</h1>
+    <h1 data-i18n="appName">BP Diary</h1>
     <span class="sub" id="hdr-sub"></span>
   </div>
 </header>
 
 <main class="wrap">
-  <section class="view" id="view-today" aria-label="Today"></section>
-  <section class="view" id="view-history" aria-label="History" hidden></section>
-  <section class="view" id="view-trends" aria-label="Trends" hidden></section>
-  <section class="view" id="view-more" aria-label="More" hidden></section>
+  <section class="view" id="view-today" aria-label="Today" data-i18n-aria="tabToday"></section>
+  <section class="view" id="view-history" aria-label="History" data-i18n-aria="tabHistory" hidden></section>
+  <section class="view" id="view-trends" aria-label="Trends" data-i18n-aria="tabTrends" hidden></section>
+  <section class="view" id="view-more" aria-label="More" data-i18n-aria="tabMore" hidden></section>
 </main>
 
-<nav class="tabs" aria-label="Main">
+<nav class="tabs" aria-label="Main" data-i18n-aria="mainNav">
   <div class="wrap">
     <button class="tab" data-view="today" aria-current="page">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M5 12h3l1.5-2.5L12 14l1.5-2H19"/></svg>Today</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M5 12h3l1.5-2.5L12 14l1.5-2H19"/></svg><span data-i18n="tabToday">Today</span></button>
     <button class="tab" data-view="history">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>History</button>
-    <button class="tab-add" id="tab-add" aria-label="Add reading">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg><span data-i18n="tabHistory">History</span></button>
+    <button class="tab-add" id="tab-add" aria-label="Add reading" data-i18n-aria="addReading">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     <button class="tab" data-view="trends">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M4 15l5-5 4 3 7-7"/></svg>Trends</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M4 15l5-5 4 3 7-7"/></svg><span data-i18n="tabTrends">Trends</span></button>
     <button class="tab" data-view="more">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg>More</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span data-i18n="tabMore">More</span></button>
   </div>
 </nav>
 
@@ -250,43 +254,43 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
     <div class="grab"></div>
     <div class="sheet-head">
       <h2 id="sheet-title">New reading</h2>
-      <button class="btn link" type="button" id="sheet-cancel">Cancel</button>
+      <button class="btn link" type="button" id="sheet-cancel" data-i18n="cancel">Cancel</button>
     </div>
     <form class="reading" id="reading-form" novalidate>
       <div class="big-inputs">
-        <label class="field"><span>Systolic</span><input class="big" id="f-sys" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="120" autocomplete="off"></label>
+        <label class="field"><span data-i18n="systolic">Systolic</span><input class="big" id="f-sys" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="120" autocomplete="off"></label>
         <div class="slash">/</div>
-        <label class="field"><span>Diastolic</span><input class="big" id="f-dia" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="80" autocomplete="off"></label>
+        <label class="field"><span data-i18n="diastolic">Diastolic</span><input class="big" id="f-dia" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="80" autocomplete="off"></label>
       </div>
       <div class="two">
-        <label class="field"><span>Pulse</span><input class="mid" id="f-pulse" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="bpm" autocomplete="off"></label>
-        <label class="field"><span>Date &amp; time</span><input type="datetime-local" id="f-when"></label>
+        <label class="field"><span data-i18n="pulse">Pulse</span><input class="mid" id="f-pulse" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="bpm" data-i18n-ph="bpm" autocomplete="off"></label>
+        <label class="field"><span data-i18n="dateTime">Date &amp; time</span><input type="datetime-local" id="f-when"></label>
       </div>
-      <div class="field"><span>Session</span>
+      <div class="field"><span data-i18n="session">Session</span>
         <div class="seg" id="f-session">
-          <button type="button" data-v="morning">Morning</button><button type="button" data-v="evening">Evening</button><button type="button" data-v="extra">Extra</button>
+          <button type="button" data-v="morning" data-i18n="morning">Morning</button><button type="button" data-v="evening" data-i18n="evening">Evening</button><button type="button" data-v="extra" data-i18n="extra">Extra</button>
         </div>
       </div>
       <div class="two" style="grid-template-columns:1fr 1fr">
-        <div class="field"><span>Arm</span>
-          <div class="seg" id="f-arm"><button type="button" data-v="left">Left</button><button type="button" data-v="right">Right</button></div>
+        <div class="field"><span data-i18n="arm">Arm</span>
+          <div class="seg" id="f-arm"><button type="button" data-v="left" data-i18n="left">Left</button><button type="button" data-v="right" data-i18n="right">Right</button></div>
         </div>
-        <div class="field"><span>Position</span>
-          <div class="seg" id="f-pos"><button type="button" data-v="sitting">Sit</button><button type="button" data-v="standing">Stand</button><button type="button" data-v="lying">Lie</button></div>
+        <div class="field"><span data-i18n="position">Position</span>
+          <div class="seg" id="f-pos"><button type="button" data-v="sitting" data-i18n="sit">Sit</button><button type="button" data-v="standing" data-i18n="stand">Stand</button><button type="button" data-v="lying" data-i18n="lie">Lie</button></div>
         </div>
       </div>
-      <div class="field"><span>What happened before?</span>
+      <div class="field"><span data-i18n="before">What happened before?</span>
         <div class="tagset" id="f-tags"></div>
       </div>
-      <label class="check"><input type="checkbox" id="f-irr"> Monitor showed irregular heartbeat</label>
-      <label class="field"><span>Note</span><textarea id="f-note" rows="2" placeholder="Optional"></textarea></label>
+      <label class="check"><input type="checkbox" id="f-irr"> <span data-i18n="irregular">Monitor showed irregular heartbeat</span></label>
+      <label class="field"><span data-i18n="note">Note</span><textarea id="f-note" rows="2" placeholder="Optional" data-i18n-ph="optional"></textarea></label>
       <p class="err" id="f-err" role="alert"></p>
       <div class="btn-row">
-        <button class="btn primary" type="submit" id="f-save">Save</button>
-        <button class="btn" type="button" id="f-save-more">Save &amp; add 2nd reading</button>
+        <button class="btn primary" type="submit" id="f-save" data-i18n="save">Save</button>
+        <button class="btn" type="button" id="f-save-more" data-i18n="saveMore">Save &amp; add 2nd reading</button>
       </div>
       <button class="btn danger block" type="button" id="f-delete" hidden>Delete reading</button>
-      <p class="tip" id="f-tip">Sit quietly for 5 minutes, feet flat, arm resting at heart level. Take 2 readings 1 minute apart. Both count toward this session's average.</p>
+      <p class="tip" id="f-tip" data-i18n="tip">Sit quietly for 5 minutes, feet flat, arm resting at heart level. Take 2 readings 1 minute apart. Both count toward this session's average.</p>
     </form>
   </div>
 </div>
@@ -295,10 +299,10 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 <div class="overlay" id="text-overlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="text-title">
     <div class="grab"></div>
-    <div class="sheet-head"><h2 id="text-title">Export</h2><button class="btn link" type="button" id="text-close">Done</button></div>
-    <p class="small muted" id="text-hint">File downloads are blocked here. Copy the text and paste it into a file.</p>
+    <div class="sheet-head"><h2 id="text-title">Export</h2><button class="btn link" type="button" id="text-close" data-i18n="done">Done</button></div>
+    <p class="small muted" id="text-hint" data-i18n="exportHint">File downloads are blocked here. Copy the text and paste it into a file.</p>
     <textarea id="text-body" rows="12" readonly></textarea>
-    <div class="btn-row" style="margin-top:10px"><button class="btn primary" type="button" id="text-copy">Copy</button></div>
+    <div class="btn-row" style="margin-top:10px"><button class="btn primary" type="button" id="text-copy" data-i18n="copy">Copy</button></div>
   </div>
 </div>
 
@@ -306,8 +310,8 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 <div class="overlay report-overlay" id="report-overlay" hidden>
   <div class="sheet report" role="dialog" aria-modal="true" aria-labelledby="report-title">
     <div class="sheet-head no-print">
-      <button class="btn link" type="button" id="report-print">Print or save PDF</button>
-      <button class="btn link" type="button" id="report-close">Close</button>
+      <button class="btn link" type="button" id="report-print" data-i18n="printPdf">Print or save PDF</button>
+      <button class="btn link" type="button" id="report-close" data-i18n="close">Close</button>
     </div>
     <div id="report-body"></div>
   </div>
@@ -319,16 +323,145 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 (() => {
 'use strict';
 
-/* ---------- Strings (English first; other languages plug in here) ---------- */
+/* ---------- Strings: English is the main language; Russian second. Add a language by adding a table. ---------- */
+const LANGS = { en: 'English', ru: 'Русский' };
 const STR = {
   en: {
+    appName: 'BP Diary', tabToday: 'Today', tabHistory: 'History', tabTrends: 'Trends', tabMore: 'More', mainNav: 'Main', addReading: 'Add reading',
+    newReading: 'New reading', editReading: 'Edit reading', cancel: 'Cancel',
+    systolic: 'Systolic', diastolic: 'Diastolic', pulse: 'Pulse', bpm: 'bpm', dateTime: 'Date & time', session: 'Session',
+    arm: 'Arm', position: 'Position', left: 'Left', right: 'Right', sit: 'Sit', stand: 'Stand', lie: 'Lie',
+    before: 'What happened before?', irregular: 'Monitor showed irregular heartbeat', note: 'Note', optional: 'Optional',
+    save: 'Save', saveMore: 'Save & add 2nd reading', deleteReading: 'Delete reading', tapDelete: 'Tap again to delete',
+    tip: "Sit quietly for 5 minutes, feet flat, arm resting at heart level. Take 2 readings 1 minute apart. Both count toward this session's average.",
+    done: 'Done', exportHint: 'File downloads are blocked here. Copy the text and paste it into a file.', copy: 'Copy', printPdf: 'Print or save PDF', close: 'Close',
     morning: 'Morning', evening: 'Evening', extra: 'Extra',
     tags: { coffee: 'Coffee', alcohol: 'Alcohol', smoked: 'Smoked', stress: 'Stress', exercise: 'Exercise', poor_sleep: 'Poor sleep', salty: 'Salty meal', meds: 'Took meds', pain: 'Pain' },
     cats: { low: 'Low', normal: 'Normal', elevated: 'Elevated', stage1: 'Stage 1 hypertension', stage2: 'Stage 2 hypertension', severe: 'Severe' },
-  }
+    mmHg: 'mmHg', mmHgAvg: 'mmHg avg', storageFail: 'Could not save. Storage is unavailable.',
+    today: 'Today', yesterday: 'Yesterday',
+    exampleStrong: "You're looking at example readings.", exampleRest: 'They disappear when you save your first real reading.', clearExamples: 'Clear examples',
+    notMeasured: 'Not measured yet', addMorning: '+ Add morning reading', addEvening: '+ Add evening reading',
+    sessionAria: (s, sys, dia) => `${s} ${sys} over ${dia}, add another`,
+    avgOf: n => `avg of ${n}`,
+    severeStrong: (sys, dia) => `Very high reading (${sys}/${dia}).`,
+    severeRest: 'Rest quietly for 5 minutes and measure again. If it stays above 180/120, or you have chest pain, shortness of breath, back pain, numbness, weakness, or changes in vision or speech, call emergency services now.',
+    extraReadings: 'Extra readings', addExtra: '+ Add extra reading', last7: 'Last 7 days',
+    completeDays: (c, n) => `${c} of 7 days with both morning and evening readings · ${n}`,
+    noWeek: 'No readings in the last 7 days yet.',
+    disclaimer: 'Categories follow the ACC/AHA adult guideline. Your average over several days matters more than any single reading. This diary does not replace advice from your doctor.',
+    ihb: 'IHB', noReadings: 'No readings yet.', addFirst: 'Add your first reading', avg: 'avg', showOlder: 'Show older days',
+    d7: '7 days', d30: '30 days', d90: '90 days', all: 'All', period: 'Period',
+    needTwo: 'Add at least 2 readings in this period to see trends.', legendNote: 'Line = daily average, dots = readings',
+    average: 'Average', highest: 'Highest', lowest: 'Lowest', byCategory: 'Readings by category',
+    patterns: 'Patterns in your tags', patternsNote: 'Average of tagged readings compared with all others in this period. A pattern, not proof.',
+    doctorReport: 'Doctor report', exportCsv: 'Export CSV', chartAria: 'Blood pressure over time',
+    preferences: 'Preferences', language: 'Language', nameOnReports: 'Name on reports', nameHint: 'Optional. Shown on the doctor report only.', yourName: 'Your name',
+    dateFormat: 'Date format', device: 'Device', timeFormat: 'Time format', h24: '24-hour (19:05)', h12: '12-hour (7:05 PM)', usualArm: 'Usual arm', saved: 'Saved',
+    importTitle: 'Import from your monitor', importText: 'Export a CSV file from the OMRON connect app (or any monitor app that exports CSV), then pick it here. Duplicates are skipped.', chooseCsv: 'Choose CSV file',
+    yourData: 'Your data', dataText: n => `${n}, stored only on this device. Make a backup now and then.`,
+    storageWarn: 'Storage is unavailable in this browser, so nothing will be kept after you close it.',
+    backup: 'Back up', restore: 'Restore backup', deleteAll: 'Delete all readings', tapDeleteAll: 'Tap again to delete everything',
+    installTitle: 'Install on iPhone', installText: "Open this page in Safari, tap the Share button, then <strong>Add to Home Screen</strong>. BP Diary then opens like an app, works offline, and keeps your data safe from Safari's storage clean-up.",
+    categoriesTitle: 'Blood pressure categories',
+    scale: { normal: 'below 120 and below 80', elevated: '120–129 and below 80', stage1: '130–139 or 80–89', stage2: '140+ or 90+', severe: 'above 180 and/or above 120', low: 'below 90 or below 60' },
+    catsNote: 'Adult categories from the American College of Cardiology and American Heart Association guideline. "Low" is shown for information only. Your doctor may set different targets for you.',
+    errNoCols: "Couldn't find Systolic and Diastolic columns in this file. Check that it is a blood pressure export with a header row.",
+    errNoDate: "Couldn't find a Date column in this file.", readFail: "Couldn't read that file.",
+    found: (n, dupes, skipped) => `<strong>${n}</strong> new readings found${dupes ? `, ${dupes} already in your diary` : ''}${skipped ? `, ${skipped} rows skipped` : ''}.`,
+    datesAre: 'Dates in this file are', checkPreview: 'Check the preview below shows the right days.', dmy: 'day/month/year', mdy: 'month/day/year',
+    thDate: 'Date', thTime: 'Time', thBP: 'BP', importN: n => `Import ${n} readings`, imported: n => `Imported ${n} readings`,
+    copied: 'Copied', selectCopy: 'Select all and copy', restored: n => `Restored ${n} readings`, notBackup: "That file isn't a BP Diary backup.",
+    noPeriod: 'No readings in this period.',
+    reportTitle: 'Blood pressure report', reportRange: (a, b, n, d) => `${a} to ${b} · ${n} on ${d}`, includesExamples: 'includes example data',
+    overallAvg: 'Overall average', morningAvg: 'Morning average', eveningAvg: 'Evening average', avgCategory: 'Average category', avgPulse: p => `Average pulse ${p} bpm`,
+    thMorningP: 'Morning (pulse)', thEveningP: 'Evening (pulse)', thNotes: 'Notes',
+    reportFoot: d => `Session values are averages of the readings taken in that session. Values in mmHg. Generated by BP Diary on ${d}.`,
+    errSys: 'Enter a systolic value between 60 and 300.', errDia: 'Enter a diastolic value between 30 and 200.',
+    errOrder: 'Diastolic (bottom number) should be lower than systolic (top number).', errPulse: 'Enter a pulse between 25 and 250, or leave it empty.',
+    errWhen: 'Choose a date and time.', errFuture: "The date and time can't be in the future.",
+    updated: 'Reading updated', savedEx: 'Saved. Example readings removed.', readingSaved: 'Reading saved', readingDeleted: 'Reading deleted',
+    examplesCleared: 'Examples cleared', allDeleted: 'All readings deleted',
+    readings: { one: '# reading', other: '# readings' }, days: { one: '# day', other: '# days' },
+  },
+  ru: {
+    appName: 'Дневник давления', tabToday: 'Сегодня', tabHistory: 'История', tabTrends: 'Динамика', tabMore: 'Ещё', mainNav: 'Главное меню', addReading: 'Добавить измерение',
+    newReading: 'Новое измерение', editReading: 'Изменить измерение', cancel: 'Отмена',
+    systolic: 'Систолическое', diastolic: 'Диастолическое', pulse: 'Пульс', bpm: 'уд/мин', dateTime: 'Дата и время', session: 'Время суток',
+    arm: 'Рука', position: 'Положение', left: 'Левая', right: 'Правая', sit: 'Сидя', stand: 'Стоя', lie: 'Лёжа',
+    before: 'Что было перед измерением?', irregular: 'Тонометр показал нерегулярный пульс', note: 'Заметка', optional: 'Необязательно',
+    save: 'Сохранить', saveMore: 'Сохранить и добавить ещё', deleteReading: 'Удалить измерение', tapDelete: 'Нажмите ещё раз, чтобы удалить',
+    tip: 'Посидите спокойно 5 минут, ноги на полу, рука на уровне сердца. Сделайте 2 измерения с перерывом в 1 минуту. Оба войдут в среднее значение.',
+    done: 'Готово', exportHint: 'Скачивание файлов здесь недоступно. Скопируйте текст и вставьте его в файл.', copy: 'Копировать', printPdf: 'Печать или PDF', close: 'Закрыть',
+    morning: 'Утро', evening: 'Вечер', extra: 'Доп.',
+    tags: { coffee: 'Кофе', alcohol: 'Алкоголь', smoked: 'Курение', stress: 'Стресс', exercise: 'Физнагрузка', poor_sleep: 'Плохой сон', salty: 'Солёная еда', meds: 'Лекарства', pain: 'Боль' },
+    cats: { low: 'Пониженное', normal: 'Нормальное', elevated: 'Повышенное', stage1: 'Гипертензия 1 стадии', stage2: 'Гипертензия 2 стадии', severe: 'Очень высокое' },
+    mmHg: 'мм рт. ст.', mmHgAvg: 'мм рт. ст., среднее', storageFail: 'Не удалось сохранить: хранилище недоступно.',
+    today: 'Сегодня', yesterday: 'Вчера',
+    exampleStrong: 'Это примеры измерений.', exampleRest: 'Они исчезнут, когда вы сохраните первое настоящее измерение.', clearExamples: 'Удалить примеры',
+    notMeasured: 'Ещё не измерено', addMorning: '+ Добавить утреннее измерение', addEvening: '+ Добавить вечернее измерение',
+    sessionAria: (s, sys, dia) => `${s}: ${sys} на ${dia}, добавить ещё`,
+    avgOf: n => `среднее из ${n}`,
+    severeStrong: (sys, dia) => `Очень высокое давление (${sys}/${dia}).`,
+    severeRest: 'Посидите спокойно 5 минут и измерьте снова. Если давление остаётся выше 180/120 или есть боль в груди, одышка, боль в спине, онемение, слабость, нарушения зрения или речи, немедленно вызовите скорую помощь.',
+    extraReadings: 'Дополнительные измерения', addExtra: '+ Добавить дополнительное измерение', last7: 'Последние 7 дней',
+    completeDays: (c, n) => `${c} из 7 дней с утренним и вечерним измерением · ${n}`,
+    noWeek: 'За последние 7 дней измерений пока нет.',
+    disclaimer: 'Категории соответствуют рекомендациям ACC/AHA для взрослых. Среднее значение за несколько дней важнее любого отдельного измерения. Дневник не заменяет консультацию врача.',
+    ihb: 'аритмия', noReadings: 'Измерений пока нет.', addFirst: 'Добавить первое измерение', avg: 'ср.', showOlder: 'Показать более ранние дни',
+    d7: '7 дней', d30: '30 дней', d90: '90 дней', all: 'Всё', period: 'Период',
+    needTwo: 'Добавьте хотя бы 2 измерения за этот период, чтобы увидеть динамику.', legendNote: 'Линия: среднее за день, точки: измерения',
+    average: 'Среднее', highest: 'Максимум', lowest: 'Минимум', byCategory: 'Измерения по категориям',
+    patterns: 'Связь с отметками', patternsNote: 'Среднее отмеченных измерений по сравнению с остальными за этот период. Это закономерность, а не доказательство.',
+    doctorReport: 'Отчёт для врача', exportCsv: 'Экспорт CSV', chartAria: 'Давление во времени',
+    preferences: 'Настройки', language: 'Язык', nameOnReports: 'Имя в отчётах', nameHint: 'Необязательно. Показывается только в отчёте для врача.', yourName: 'Ваше имя',
+    dateFormat: 'Формат даты', device: 'Как на устройстве', timeFormat: 'Формат времени', h24: '24 часа (19:05)', h12: '12 часов (7:05 PM)', usualArm: 'Обычно измеряю на руке', saved: 'Сохранено',
+    importTitle: 'Импорт из тонометра', importText: 'Экспортируйте CSV-файл из приложения OMRON connect (или другого приложения тонометра), затем выберите его здесь. Повторы пропускаются.', chooseCsv: 'Выбрать CSV-файл',
+    yourData: 'Ваши данные', dataText: n => `${n}, хранятся только на этом устройстве. Время от времени делайте резервную копию.`,
+    storageWarn: 'Хранилище в этом браузере недоступно, поэтому данные не сохранятся после закрытия.',
+    backup: 'Резервная копия', restore: 'Восстановить копию', deleteAll: 'Удалить все измерения', tapDeleteAll: 'Нажмите ещё раз, чтобы удалить всё',
+    installTitle: 'Установка на iPhone', installText: 'Откройте эту страницу в Safari, нажмите «Поделиться», затем <strong>«На экран „Домой“»</strong>. Дневник будет открываться как приложение, работать без интернета, а данные не удалятся при очистке Safari.',
+    categoriesTitle: 'Категории давления',
+    scale: { normal: 'ниже 120 и ниже 80', elevated: '120–129 и ниже 80', stage1: '130–139 или 80–89', stage2: 'от 140 или от 90', severe: 'выше 180 и/или выше 120', low: 'ниже 90 или ниже 60' },
+    catsNote: 'Категории для взрослых по рекомендациям Американской коллегии кардиологов и Американской кардиологической ассоциации. «Пониженное» показывается только для информации. Врач может назначить вам другие целевые значения.',
+    errNoCols: 'В файле не найдены столбцы систолического и диастолического давления. Проверьте, что это экспорт измерений с заголовками столбцов.',
+    errNoDate: 'В файле не найден столбец с датой.', readFail: 'Не удалось прочитать файл.',
+    found: (n, dupes, skipped) => `Новых измерений: <strong>${n}</strong>${dupes ? `, уже в дневнике: ${dupes}` : ''}${skipped ? `, пропущено строк: ${skipped}` : ''}.`,
+    datesAre: 'Даты в файле записаны как', checkPreview: 'Проверьте, что ниже показаны правильные дни.', dmy: 'день/месяц/год', mdy: 'месяц/день/год',
+    thDate: 'Дата', thTime: 'Время', thBP: 'АД', importN: n => `Импортировать (${n})`, imported: n => `Импортировано: ${n}`,
+    copied: 'Скопировано', selectCopy: 'Выделите всё и скопируйте', restored: n => `Восстановлено: ${n}`, notBackup: 'Этот файл не является резервной копией дневника.',
+    noPeriod: 'За этот период измерений нет.',
+    reportTitle: 'Отчёт об артериальном давлении', reportRange: (a, b, n, d) => `${a} – ${b} · ${n} за ${d}`, includesExamples: 'содержит примеры',
+    overallAvg: 'Общее среднее', morningAvg: 'Среднее утром', eveningAvg: 'Среднее вечером', avgCategory: 'Средняя категория', avgPulse: p => `Средний пульс ${p} уд/мин`,
+    thMorningP: 'Утро (пульс)', thEveningP: 'Вечер (пульс)', thNotes: 'Заметки',
+    reportFoot: d => `Значения за утро и вечер — средние из измерений за это время, в мм рт. ст. Отчёт создан в «Дневнике давления» ${d}.`,
+    errSys: 'Введите систолическое давление от 60 до 300.', errDia: 'Введите диастолическое давление от 30 до 200.',
+    errOrder: 'Диастолическое (нижнее) должно быть меньше систолического (верхнего).', errPulse: 'Введите пульс от 25 до 250 или оставьте поле пустым.',
+    errWhen: 'Выберите дату и время.', errFuture: 'Дата и время не могут быть в будущем.',
+    updated: 'Измерение изменено', savedEx: 'Сохранено. Примеры удалены.', readingSaved: 'Измерение сохранено', readingDeleted: 'Измерение удалено',
+    examplesCleared: 'Примеры удалены', allDeleted: 'Все измерения удалены',
+    readings: { one: '# измерение', few: '# измерения', many: '# измерений', other: '# измерения' },
+    days: { one: '# день', few: '# дня', many: '# дней', other: '# дня' },
+  },
 };
-const L = STR.en;
-const TAG_KEYS = Object.keys(L.tags);
+let lang = 'en';
+let L = STR.en;
+const TAG_KEYS = Object.keys(STR.en.tags);
+// t('key') or t('key', arg...) for phrases with numbers; falls back to English.
+function t(key, ...args) { const v = L[key] ?? STR.en[key]; return typeof v === 'function' ? v(...args) : v; }
+function plural(key, n) { const forms = L[key] || STR.en[key]; const f = new Intl.PluralRules(lang).select(n); return (forms[f] || forms.other).replace('#', n); }
+// Dates follow the app language; English keeps the device's region (US/UK style) when the device is English.
+function loc() { if (lang === 'ru') return 'ru-RU'; return /^en/i.test(navigator.language || '') ? navigator.language : 'en-GB'; }
+const cap = w => w ? w[0].toLocaleUpperCase(loc()) + w.slice(1) : w;
+function setLang(code) {
+  lang = STR[code] ? code : 'en'; L = STR[lang];
+  document.documentElement.lang = lang;
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  $$('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  document.title = t('appName');
+  $('#f-tags').innerHTML = TAG_KEYS.map(k => `<button type="button" data-v="${k}" aria-pressed="false">${esc(L.tags[k])}</button>`).join('');
+}
 
 /* ---------- Environment ---------- */
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -343,9 +476,9 @@ function readStore() {
 }
 function persist() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); }
-  catch (e) { storageOK = false; toast('Could not save. Storage is unavailable.'); }
+  catch (e) { storageOK = false; toast(t('storageFail')); }
 }
-const DEFAULT_SETTINGS = { dateFormat: 'auto', timeFormat: 'auto', name: '', defaultArm: 'left' };
+const DEFAULT_SETTINGS = { lang: 'en', dateFormat: 'auto', timeFormat: 'auto', name: '', defaultArm: 'left' };
 let state = null;
 function initState() {
   state = readStore();
@@ -381,14 +514,14 @@ function fmtDate(d, withYear = true) {
   if (f === 'DMY') return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}${withYear ? '.' + d.getFullYear() : ''}`;
   if (f === 'MDY') return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}${withYear ? '/' + d.getFullYear() : ''}`;
   if (f === 'YMD') return withYear ? dayKey(d) : `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  return d.toLocaleDateString(undefined, withYear ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString(loc(), withYear ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
 }
 function fmtDayHeading(d) {
   const today = startOfDay(new Date());
   const diff = Math.round((today - startOfDay(d)) / DAY);
-  const wd = d.toLocaleDateString(undefined, { weekday: 'long' });
-  if (diff === 0) return `Today · ${fmtDate(d, false)}`;
-  if (diff === 1) return `Yesterday · ${fmtDate(d, false)}`;
+  const wd = cap(d.toLocaleDateString(loc(), { weekday: 'long' }));
+  if (diff === 0) return `${t('today')} · ${fmtDate(d, false)}`;
+  if (diff === 1) return `${t('yesterday')} · ${fmtDate(d, false)}`;
   return `${wd} · ${fmtDate(d, d.getFullYear() !== today.getFullYear())}`;
 }
 function fmtTime(d) {
@@ -396,7 +529,7 @@ function fmtTime(d) {
   const opts = { hour: 'numeric', minute: '2-digit' };
   if (f === '24') opts.hourCycle = 'h23';
   if (f === '12') { opts.hour12 = true; opts.hour = 'numeric'; }
-  return d.toLocaleTimeString(undefined, opts);
+  return d.toLocaleTimeString(loc(), opts);
 }
 
 /* ACC/AHA adult categories. "Low" is an informational flag below 90/60. */
@@ -463,6 +596,7 @@ function makeExamples() {
 }
 
 initState();
+setLang(state.settings.lang);
 
 /* ---------- Toast ---------- */
 let toastTimer;
@@ -494,7 +628,7 @@ function render() {
 
 function exampleBanner() {
   if (!hasExamples()) return '';
-  return `<div class="banner"><p><strong>You're looking at example readings.</strong> They disappear when you save your first real reading.</p><button class="btn" data-act="clear-examples">Clear examples</button></div>`;
+  return `<div class="banner"><p><strong>${t('exampleStrong')}</strong> ${t('exampleRest')}</p><button class="btn" data-act="clear-examples">${t('clearExamples')}</button></div>`;
 }
 
 /* ---------- Today ---------- */
@@ -506,24 +640,24 @@ function sessionCard(session, list) {
   if (!list.length) {
     return `<button class="card session empty" data-act="add" data-session="${session}">
       <span class="label">${icon}${L[session]}</span>
-      <span>Not measured yet</span>
-      <span class="cta">+ Add ${L[session].toLowerCase()} reading</span></button>`;
+      <span>${t('notMeasured')}</span>
+      <span class="cta">${t(session === 'morning' ? 'addMorning' : 'addEvening')}</span></button>`;
   }
   const a = average(list);
   const c = category(a.sys, a.dia);
   const times = list.slice().sort((x, y) => x.ts - y.ts).map(r => fmtTime(new Date(r.ts))).join(', ');
-  return `<button class="card session" data-act="add" data-session="${session}" aria-label="${L[session]} ${a.sys} over ${a.dia}, add another">
+  return `<button class="card session" data-act="add" data-session="${session}" aria-label="${esc(t('sessionAria', L[session], a.sys, a.dia))}">
     <span class="label">${icon}${L[session]}</span>
-    <span class="bp">${a.sys}/${a.dia}<small>mmHg</small></span>
+    <span class="bp">${a.sys}/${a.dia}<small>${t('mmHg')}</small></span>
     ${pill(c)}
-    <span class="meta">${a.pulse ? a.pulse + ' bpm · ' : ''}${a.n > 1 ? `avg of ${a.n}` : '1 reading'} · ${esc(times)}</span>
+    <span class="meta">${a.pulse ? a.pulse + ' ' + t('bpm') + ' · ' : ''}${a.n > 1 ? t('avgOf', a.n) : plural('readings', 1)} · ${esc(times)}</span>
   </button>`;
 }
 
 function severeAlert(list) {
   const latest = list.slice().sort((a, b) => b.ts - a.ts)[0];
   if (!latest || category(latest.sys, latest.dia) !== 'severe') return '';
-  return `<div class="alert" role="alert"><strong>Very high reading (${latest.sys}/${latest.dia}).</strong> Rest quietly for 5 minutes and measure again. If it stays above 180/120, or you have chest pain, shortness of breath, back pain, numbness, weakness, or changes in vision or speech, call emergency services now.</div>`;
+  return `<div class="alert" role="alert"><strong>${t('severeStrong', latest.sys, latest.dia)}</strong> ${t('severeRest')}</div>`;
 }
 
 function sparkline(days) {
@@ -572,23 +706,23 @@ function renderToday() {
     ${severeAlert(todays)}
     <h2 class="sec">${esc(fmtDayHeading(now))}</h2>
     <div class="sessions">${sessionCard('morning', m)}${sessionCard('evening', e)}</div>
-    ${x.length ? `<div class="card"><div class="label" style="font-weight:600;margin-bottom:4px">Extra readings</div><div class="extras">${x.map(readingRow).join('')}</div></div>` : ''}
-    <button class="btn" data-act="add" data-session="extra">+ Add extra reading</button>
-    <h2 class="sec">Last 7 days</h2>
+    ${x.length ? `<div class="card"><div class="label" style="font-weight:600;margin-bottom:4px">${t('extraReadings')}</div><div class="extras">${x.map(readingRow).join('')}</div></div>` : ''}
+    <button class="btn" data-act="add" data-session="extra">${t('addExtra')}</button>
+    <h2 class="sec">${t('last7')}</h2>
     ${wa ? `<div class="card summary">
       <div class="summary-head">
-        <div><div class="bp">${wa.sys}/${wa.dia}<small>mmHg avg</small></div></div>
+        <div><div class="bp">${wa.sys}/${wa.dia}<small>${t('mmHgAvg')}</small></div></div>
         ${pill(category(wa.sys, wa.dia))}
       </div>
       ${sparkline(14)}
       <dl class="kv" style="margin:0">
-        <div><dt>Morning</dt><dd>${wm ? wm.sys + '/' + wm.dia : '–'}</dd></div>
-        <div><dt>Evening</dt><dd>${we ? we.sys + '/' + we.dia : '–'}</dd></div>
-        <div><dt>Pulse</dt><dd>${wa.pulse ?? '–'}</dd></div>
+        <div><dt>${t('morning')}</dt><dd>${wm ? wm.sys + '/' + wm.dia : '–'}</dd></div>
+        <div><dt>${t('evening')}</dt><dd>${we ? we.sys + '/' + we.dia : '–'}</dd></div>
+        <div><dt>${t('pulse')}</dt><dd>${wa.pulse ?? '–'}</dd></div>
       </dl>
-      <div class="small muted">${complete} of 7 days with both morning and evening readings · ${wa.n} readings</div>
-    </div>` : `<div class="card muted">No readings in the last 7 days yet.</div>`}
-    <p class="small muted">Categories follow the ACC/AHA adult guideline. Your average over several days matters more than any single reading. This diary does not replace advice from your doctor.</p>
+      <div class="small muted">${t('completeDays', complete, plural('readings', wa.n))}</div>
+    </div>` : `<div class="card muted">${t('noWeek')}</div>`}
+    <p class="small muted">${t('disclaimer')}</p>
   `;
 }
 
@@ -600,7 +734,7 @@ function readingRow(r) {
     <span class="t">${esc(fmtTime(d))}</span>
     <span class="dot" title="${L.cats[c]}"></span>
     <span class="v">${r.sys}/${r.dia}</span>
-    <span class="p">${r.pulse ? r.pulse + ' bpm' : ''}${r.irregular ? ' · IHB' : ''}</span>
+    <span class="p">${r.pulse ? r.pulse + ' ' + t('bpm') : ''}${r.irregular ? ' · ' + t('ihb') : ''}</span>
     <span class="tags">${esc(tags)}${r.note ? (tags ? ' · ' : '') + '✎' : ''}</span>
   </button>`;
 }
@@ -610,7 +744,7 @@ let historyLimit = 30;
 function renderHistory() {
   const list = sorted();
   if (!list.length) {
-    $('#view-history').innerHTML = `<div class="card"><p style="margin:0 0 10px">No readings yet.</p><button class="btn primary" data-act="add">Add your first reading</button></div>`;
+    $('#view-history').innerHTML = `<div class="card"><p style="margin:0 0 10px">${t('noReadings')}</p><button class="btn primary" data-act="add">${t('addFirst')}</button></div>`;
     return;
   }
   const groups = byDay(list);
@@ -620,18 +754,18 @@ function renderHistory() {
     const a = average(items);
     const order = ['morning', 'evening', 'extra'];
     const rows = order.map(s => { const l = items.filter(r => r.session === s); return l.length ? `<div class="sess-tag">${L[s]}</div><div>${l.map(readingRow).join('')}</div>` : ''; }).join('');
-    return `<div class="card day"><h3>${esc(fmtDayHeading(fromDayKey(k)))}<span>avg ${a.sys}/${a.dia}</span></h3>${rows}</div>`;
+    return `<div class="card day"><h3>${esc(fmtDayHeading(fromDayKey(k)))}<span>${t('avg')} ${a.sys}/${a.dia}</span></h3>${rows}</div>`;
   }).join('');
-  $('#view-history').innerHTML = `${exampleBanner()}${html}${groups.size > historyLimit ? `<button class="btn block" data-act="more-history">Show older days</button>` : ''}`;
+  $('#view-history').innerHTML = `${exampleBanner()}${html}${groups.size > historyLimit ? `<button class="btn block" data-act="more-history">${t('showOlder')}</button>` : ''}`;
 }
 
 /* ---------- Trends ---------- */
 let trendDays = 30;
 function renderTrends() {
   const list = inRange(trendDays).sort((a, b) => a.ts - b.ts);
-  const chips = [[7, '7 days'], [30, '30 days'], [90, '90 days'], [0, 'All']].map(([d, l]) => `<button class="chip" data-act="range" data-days="${d}" aria-pressed="${trendDays === d}">${l}</button>`).join('');
+  const chips = [[7, t('d7')], [30, t('d30')], [90, t('d90')], [0, t('all')]].map(([d, l]) => `<button class="chip" data-act="range" data-days="${d}" aria-pressed="${trendDays === d}">${l}</button>`).join('');
   if (list.length < 2) {
-    $('#view-trends').innerHTML = `<div class="chips">${chips}</div><div class="card muted">Add at least 2 readings in this period to see trends.</div>`;
+    $('#view-trends').innerHTML = `<div class="chips">${chips}</div><div class="card muted">${t('needTwo')}</div>`;
     return;
   }
   const a = average(list);
@@ -658,30 +792,30 @@ function renderTrends() {
 
   $('#view-trends').innerHTML = `
     ${exampleBanner()}
-    <div class="chips" role="group" aria-label="Period">${chips}</div>
+    <div class="chips" role="group" aria-label="${t('period')}">${chips}</div>
     <div class="card">
-      <div class="legend" style="margin-bottom:8px"><span><i style="background:var(--accent)"></i>Systolic</span><span><i style="background:var(--dia)"></i>Diastolic</span><span>Line = daily average, dots = readings</span></div>
+      <div class="legend" style="margin-bottom:8px"><span><i style="background:var(--accent)"></i>${t('systolic')}</span><span><i style="background:var(--dia)"></i>${t('diastolic')}</span><span>${t('legendNote')}</span></div>
       <div class="chart-box" id="chart"></div>
     </div>
     <dl class="kv" style="margin:0">
-      <div><dt>Average</dt><dd>${a.sys}/${a.dia}</dd></div>
-      <div><dt>Morning</dt><dd>${am ? am.sys + '/' + am.dia : '–'}</dd></div>
-      <div><dt>Evening</dt><dd>${ae ? ae.sys + '/' + ae.dia : '–'}</dd></div>
-      <div><dt>Highest</dt><dd>${hi.sys}/${hi.dia}</dd></div>
-      <div><dt>Lowest</dt><dd>${lo.sys}/${lo.dia}</dd></div>
-      <div><dt>Pulse</dt><dd>${a.pulse ?? '–'}</dd></div>
+      <div><dt>${t('average')}</dt><dd>${a.sys}/${a.dia}</dd></div>
+      <div><dt>${t('morning')}</dt><dd>${am ? am.sys + '/' + am.dia : '–'}</dd></div>
+      <div><dt>${t('evening')}</dt><dd>${ae ? ae.sys + '/' + ae.dia : '–'}</dd></div>
+      <div><dt>${t('highest')}</dt><dd>${hi.sys}/${hi.dia}</dd></div>
+      <div><dt>${t('lowest')}</dt><dd>${lo.sys}/${lo.dia}</dd></div>
+      <div><dt>${t('pulse')}</dt><dd>${a.pulse ?? '–'}</dd></div>
     </dl>
     <div class="card" style="display:grid;gap:10px">
-      <div style="font-weight:600">Readings by category <span class="muted small">(${list.length})</span></div>
+      <div style="font-weight:600">${t('byCategory')} <span class="muted small">(${list.length})</span></div>
       <div class="dist">${CAT_ORDER.filter(c => counts[c]).map(c => `<span class="cat-${c}" style="width:${counts[c] / list.length * 100}%"></span>`).join('')}</div>
       <div class="dist-legend">${CAT_ORDER.filter(c => counts[c]).map(c => `<div class="cat-${c}"><span class="dot"></span>${L.cats[c]}<b>${pct(c)}%</b></div>`).join('')}</div>
     </div>
     ${insights.length ? `<div class="card">
-      <div style="font-weight:600;margin-bottom:4px">Patterns in your tags</div>
-      <p class="small muted" style="margin:0 0 6px">Average of tagged readings compared with all others in this period. A pattern, not proof.</p>
-      ${insights.slice(0, 5).map(i => `<div class="insight"><span>${L.tags[i.t]} <span class="muted small">(${i.n})</span></span><span><span class="${i.ds > 0 ? 'delta-up' : 'delta-down'}">${sign(i.ds)}</span> / <span class="${i.dd > 0 ? 'delta-up' : 'delta-down'}">${sign(i.dd)}</span> mmHg</span></div>`).join('')}
+      <div style="font-weight:600;margin-bottom:4px">${t('patterns')}</div>
+      <p class="small muted" style="margin:0 0 6px">${t('patternsNote')}</p>
+      ${insights.slice(0, 5).map(i => `<div class="insight"><span>${L.tags[i.t]} <span class="muted small">(${i.n})</span></span><span><span class="${i.ds > 0 ? 'delta-up' : 'delta-down'}">${sign(i.ds)}</span> / <span class="${i.dd > 0 ? 'delta-up' : 'delta-down'}">${sign(i.dd)}</span> ${t('mmHg')}</span></div>`).join('')}
     </div>` : ''}
-    <div class="btn-row"><button class="btn primary" data-act="report">Doctor report</button><button class="btn" data-act="export-csv">Export CSV</button></div>
+    <div class="btn-row"><button class="btn primary" data-act="report">${t('doctorReport')}</button><button class="btn" data-act="export-csv">${t('exportCsv')}</button></div>
   `;
   drawChart(list);
 }
@@ -719,7 +853,7 @@ function drawChart(list) {
   const daily = Array.from(groups.entries()).map(([k, l]) => ({ t: fromDayKey(k).getTime() + DAY / 2, ...average(l) })).sort((a, b) => a.t - b.t);
   const path = key => daily.map(d => `${x(d.t).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
   const last = daily[daily.length - 1];
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Blood pressure over time">
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('chartAria')}">
     ${g}${dots('sys', 'var(--accent)')}${dots('dia', 'var(--dia)')}
     <polyline points="${path('sys')}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
     <polyline points="${path('dia')}" fill="none" stroke="var(--dia)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
@@ -736,53 +870,55 @@ function renderMore() {
   const sample = new Date(2026, 10, 24, 19, 5);
   $('#view-more').innerHTML = `
     ${exampleBanner()}
-    <h2 class="sec">Preferences</h2>
+    <h2 class="sec">${t('preferences')}</h2>
     <div class="card list">
-      <div class="item"><label for="s-name">Name on reports<span class="hint">Optional. Shown on the doctor report only.</span></label><input type="text" id="s-name" value="${esc(s.name)}" placeholder="Your name" style="max-width:50%"></div>
-      <div class="item"><label for="s-date">Date format</label><select id="s-date">
-        ${opt('auto', 'Device (' + sample.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + ')', s.dateFormat)}
+      <div class="item"><label for="s-lang">${t('language')}<span class="hint">Language / Язык</span></label><select id="s-lang">${Object.entries(LANGS).map(([k, n]) => opt(k, n, lang)).join('')}</select></div>
+      <div class="item"><label for="s-name">${t('nameOnReports')}<span class="hint">${t('nameHint')}</span></label><input type="text" id="s-name" value="${esc(s.name)}" placeholder="${t('yourName')}" style="max-width:50%"></div>
+      <div class="item"><label for="s-date">${t('dateFormat')}</label><select id="s-date">
+        ${opt('auto', t('device') + ' (' + sample.toLocaleDateString(loc(), { day: 'numeric', month: 'short', year: 'numeric' }) + ')', s.dateFormat)}
         ${opt('DMY', '24.11.2026', s.dateFormat)}${opt('MDY', '11/24/2026', s.dateFormat)}${opt('YMD', '2026-11-24', s.dateFormat)}</select></div>
-      <div class="item"><label for="s-time">Time format</label><select id="s-time">
-        ${opt('auto', 'Device', s.timeFormat)}${opt('24', '24-hour (19:05)', s.timeFormat)}${opt('12', '12-hour (7:05 PM)', s.timeFormat)}</select></div>
-      <div class="item"><label for="s-arm">Usual arm</label><select id="s-arm">${opt('left', 'Left', s.defaultArm)}${opt('right', 'Right', s.defaultArm)}</select></div>
+      <div class="item"><label for="s-time">${t('timeFormat')}</label><select id="s-time">
+        ${opt('auto', t('device'), s.timeFormat)}${opt('24', t('h24'), s.timeFormat)}${opt('12', t('h12'), s.timeFormat)}</select></div>
+      <div class="item"><label for="s-arm">${t('usualArm')}</label><select id="s-arm">${opt('left', t('left'), s.defaultArm)}${opt('right', t('right'), s.defaultArm)}</select></div>
     </div>
 
-    <h2 class="sec">Import from your monitor</h2>
+    <h2 class="sec">${t('importTitle')}</h2>
     <div class="card" style="display:grid;gap:10px">
-      <p class="prose" style="margin:0">Export a CSV file from the OMRON connect app (or any monitor app that exports CSV), then pick it here. Duplicates are skipped.</p>
-      <label class="btn primary" style="text-align:center">Choose CSV file<input type="file" id="import-file" accept=".csv,text/csv,text/plain" hidden></label>
+      <p class="prose" style="margin:0">${t('importText')}</p>
+      <label class="btn primary" style="text-align:center">${t('chooseCsv')}<input type="file" id="import-file" accept=".csv,text/csv,text/plain" hidden></label>
       <div id="import-preview"></div>
     </div>
 
-    <h2 class="sec">Your data</h2>
+    <h2 class="sec">${t('yourData')}</h2>
     <div class="card" style="display:grid;gap:10px">
-      <p class="prose" style="margin:0">${state.readings.length} readings, stored only on this device. Make a backup now and then. ${storageOK ? '' : '<strong>Storage is unavailable in this browser, so nothing will be kept after you close it.</strong>'}</p>
+      <p class="prose" style="margin:0">${t('dataText', plural('readings', state.readings.length))} ${storageOK ? '' : `<strong>${t('storageWarn')}</strong>`}</p>
       <div class="btn-row">
-        <button class="btn" data-act="report">Doctor report</button>
-        <button class="btn" data-act="export-csv">Export CSV</button>
-        <button class="btn" data-act="backup">Back up</button>
-        <label class="btn" style="text-align:center">Restore backup<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
+        <button class="btn" data-act="report">${t('doctorReport')}</button>
+        <button class="btn" data-act="export-csv">${t('exportCsv')}</button>
+        <button class="btn" data-act="backup">${t('backup')}</button>
+        <label class="btn" style="text-align:center">${t('restore')}<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
       </div>
-      <button class="btn danger" data-act="clear-all" id="clear-all">Delete all readings</button>
+      <button class="btn danger" data-act="clear-all" id="clear-all">${t('deleteAll')}</button>
     </div>
 
-    ${!standalone && !inFrame ? `<h2 class="sec">Install on iPhone</h2>
-    <div class="card prose"><p>Open this page in Safari, tap the Share button, then <strong>Add to Home Screen</strong>. BP Diary then opens like an app, works offline, and keeps your data safe from Safari's storage clean-up.</p></div>` : ''}
+    ${!standalone && !inFrame ? `<h2 class="sec">${t('installTitle')}</h2>
+    <div class="card prose"><p>${t('installText')}</p></div>` : ''}
 
-    <h2 class="sec">Blood pressure categories</h2>
+    <h2 class="sec">${t('categoriesTitle')}</h2>
     <div class="card">
       <table class="scale">
-        <tr class="cat-normal"><td>${pill('normal')}</td><td>below 120 and below 80</td></tr>
-        <tr class="cat-elevated"><td>${pill('elevated')}</td><td>120–129 and below 80</td></tr>
-        <tr class="cat-stage1"><td>${pill('stage1')}</td><td>130–139 or 80–89</td></tr>
-        <tr class="cat-stage2"><td>${pill('stage2')}</td><td>140+ or 90+</td></tr>
-        <tr class="cat-severe"><td>${pill('severe')}</td><td>above 180 and/or above 120</td></tr>
-        <tr class="cat-low"><td>${pill('low')}</td><td>below 90 or below 60</td></tr>
+        <tr class="cat-normal"><td>${pill('normal')}</td><td>${L.scale.normal}</td></tr>
+        <tr class="cat-elevated"><td>${pill('elevated')}</td><td>${L.scale.elevated}</td></tr>
+        <tr class="cat-stage1"><td>${pill('stage1')}</td><td>${L.scale.stage1}</td></tr>
+        <tr class="cat-stage2"><td>${pill('stage2')}</td><td>${L.scale.stage2}</td></tr>
+        <tr class="cat-severe"><td>${pill('severe')}</td><td>${L.scale.severe}</td></tr>
+        <tr class="cat-low"><td>${pill('low')}</td><td>${L.scale.low}</td></tr>
       </table>
-      <p class="prose" style="margin:10px 0 0">Adult categories from the American College of Cardiology and American Heart Association guideline. "Low" is shown for information only. Your doctor may set different targets for you.</p>
+      <p class="prose" style="margin:10px 0 0">${t('catsNote')}</p>
     </div>
   `;
-  $('#s-name').addEventListener('change', e => { s.name = e.target.value.trim(); persist(); toast('Saved'); });
+  $('#s-lang').addEventListener('change', e => { s.lang = e.target.value; persist(); setLang(s.lang); render(); });
+  $('#s-name').addEventListener('change', e => { s.name = e.target.value.trim(); persist(); toast(t('saved')); });
   $('#s-date').addEventListener('change', e => { s.dateFormat = e.target.value; persist(); render(); });
   $('#s-time').addEventListener('change', e => { s.timeFormat = e.target.value; persist(); render(); });
   $('#s-arm').addEventListener('change', e => { s.defaultArm = e.target.value; persist(); });
@@ -862,9 +998,9 @@ function guessOrder(dates) {
 
 function buildImport(rows, order) {
   const hi = rows.slice(0, 10).findIndex(r => { const c = mapColumns(r); return c.sys >= 0 && c.dia >= 0; });
-  if (hi < 0) return { error: "Couldn't find Systolic and Diastolic columns in this file. Check that it is a blood pressure export with a header row." };
+  if (hi < 0) return { error: 'errNoCols' };
   const cols = mapColumns(rows[hi]);
-  if (cols.date < 0) return { error: "Couldn't find a Date column in this file." };
+  if (cols.date < 0) return { error: 'errNoDate' };
   const body = rows.slice(hi + 1);
   const g = guessOrder(body.map(r => r[cols.date]));
   order = order || g.order;
@@ -897,7 +1033,7 @@ function onImportFile(e) {
     importPreview = buildImport(importRows);
     renderImportPreview();
   };
-  reader.onerror = () => toast("Couldn't read that file.");
+  reader.onerror = () => toast(t('readFail'));
   reader.readAsText(f);
   e.target.value = '';
 }
@@ -905,17 +1041,17 @@ function onImportFile(e) {
 function renderImportPreview() {
   const p = importPreview, el = $('#import-preview');
   if (!el || !p) return;
-  if (p.error) { el.innerHTML = `<p class="err">${esc(p.error)}</p>`; return; }
+  if (p.error) { el.innerHTML = `<p class="err">${esc(t(p.error))}</p>`; return; }
   const sample = p.ok.slice().sort((a, b) => b.ts - a.ts).slice(0, 5);
   el.innerHTML = `
-    <p style="margin:0 0 6px"><strong>${p.ok.length}</strong> new readings found${p.dupes ? `, ${p.dupes} already in your diary` : ''}${p.skipped ? `, ${p.skipped} rows skipped` : ''}.</p>
-    ${p.ambiguous ? `<div class="item" style="border:0;padding:4px 0"><label for="imp-order">Dates in this file are<span class="hint">Check the preview below shows the right days.</span></label><select id="imp-order"><option value="DMY"${p.order === 'DMY' ? ' selected' : ''}>day/month/year</option><option value="MDY"${p.order === 'MDY' ? ' selected' : ''}>month/day/year</option></select></div>` : ''}
-    ${sample.length ? `<div class="scroll-x"><table class="preview-table"><tr><th>Date</th><th>Time</th><th>BP</th><th>Pulse</th><th>Session</th></tr>
+    <p style="margin:0 0 6px">${t('found', p.ok.length, p.dupes, p.skipped)}</p>
+    ${p.ambiguous ? `<div class="item" style="border:0;padding:4px 0"><label for="imp-order">${t('datesAre')}<span class="hint">${t('checkPreview')}</span></label><select id="imp-order"><option value="DMY"${p.order === 'DMY' ? ' selected' : ''}>${t('dmy')}</option><option value="MDY"${p.order === 'MDY' ? ' selected' : ''}>${t('mdy')}</option></select></div>` : ''}
+    ${sample.length ? `<div class="scroll-x"><table class="preview-table"><tr><th>${t('thDate')}</th><th>${t('thTime')}</th><th>${t('thBP')}</th><th>${t('pulse')}</th><th>${t('session')}</th></tr>
       ${sample.map(r => { const d = new Date(r.ts); return `<tr><td>${esc(fmtDate(d))}</td><td>${esc(fmtTime(d))}</td><td>${r.sys}/${r.dia}</td><td>${r.pulse ?? '–'}</td><td>${L[r.session]}</td></tr>`; }).join('')}
     </table></div>` : ''}
     <div class="btn-row" style="margin-top:10px">
-      ${p.ok.length ? `<button class="btn primary" data-act="import-confirm">Import ${p.ok.length} readings</button>` : ''}
-      <button class="btn" data-act="import-cancel">Cancel</button>
+      ${p.ok.length ? `<button class="btn primary" data-act="import-confirm">${t('importN', p.ok.length)}</button>` : ''}
+      <button class="btn" data-act="import-cancel">${t('cancel')}</button>
     </div>`;
   const sel = $('#imp-order');
   if (sel) sel.addEventListener('change', () => { importPreview = buildImport(importRows, sel.value); importPreview.ambiguous = true; renderImportPreview(); });
@@ -944,7 +1080,7 @@ async function saveFile(name, text, type) {
 $('#text-close').addEventListener('click', () => { $('#text-overlay').hidden = true; });
 $('#text-copy').addEventListener('click', () => {
   const ta = $('#text-body');
-  navigator.clipboard.writeText(ta.value).then(() => toast('Copied'), () => { ta.focus(); ta.select(); toast('Select all and copy'); });
+  navigator.clipboard.writeText(ta.value).then(() => toast(t('copied')), () => { ta.focus(); ta.select(); toast(t('selectCopy')); });
 });
 
 function csvOf(list) {
@@ -952,7 +1088,7 @@ function csvOf(list) {
   const head = ['Date', 'Time', 'Systolic (mmHg)', 'Diastolic (mmHg)', 'Pulse (bpm)', 'Session', 'Category', 'Arm', 'Position', 'Irregular heartbeat', 'Tags', 'Note'];
   const lines = list.slice().sort((a, b) => a.ts - b.ts).map(r => {
     const d = new Date(r.ts);
-    return [dayKey(d), `${pad(d.getHours())}:${pad(d.getMinutes())}`, r.sys, r.dia, r.pulse ?? '', r.session, L.cats[category(r.sys, r.dia)], r.arm, r.position, r.irregular ? 'yes' : '', (r.tags || []).join(' '), r.note].map(q).join(',');
+    return [dayKey(d), `${pad(d.getHours())}:${pad(d.getMinutes())}`, r.sys, r.dia, r.pulse ?? '', r.session, STR.en.cats[category(r.sys, r.dia)], r.arm, r.position, r.irregular ? 'yes' : '', (r.tags || []).join(' '), r.note].map(q).join(',');
   });
   return [head.join(','), ...lines].join('\n');
 }
@@ -970,8 +1106,9 @@ function onRestoreFile(e) {
       let added = 0;
       for (const r of clean) if (!ids.has(r.id)) { state.readings.push({ tags: [], note: '', ...r }); added++; }
       if (data.settings) state.settings = { ...state.settings, ...data.settings };
-      persist(); render(); toast(`Restored ${added} readings`);
-    } catch (err) { toast("That file isn't a BP Diary backup."); }
+      if (data.settings) setLang(state.settings.lang);
+      persist(); render(); toast(t('restored', added));
+    } catch (err) { toast(t('notBackup')); }
   };
   reader.readAsText(f);
   e.target.value = '';
@@ -981,26 +1118,26 @@ function onRestoreFile(e) {
 function openReport() {
   const days = trendDays || 0;
   const list = inRange(days).sort((a, b) => a.ts - b.ts);
-  if (!list.length) { toast('No readings in this period.'); return; }
+  if (!list.length) { toast(t('noPeriod')); return; }
   const a = average(list), am = average(list.filter(r => r.session === 'morning')), ae = average(list.filter(r => r.session === 'evening'));
   const groups = byDay(list);
   const rows = Array.from(groups.entries()).map(([k, l]) => {
     const m = average(l.filter(r => r.session === 'morning')), e = average(l.filter(r => r.session === 'evening')), x = l.filter(r => r.session === 'extra');
-    const notes = l.flatMap(r => [...(r.tags || []).map(t => L.tags[t]), r.irregular ? 'IHB' : '', r.note]).filter(Boolean);
+    const notes = l.flatMap(r => [...(r.tags || []).map(k => L.tags[k]), r.irregular ? t('ihb') : '', r.note]).filter(Boolean);
     return `<tr><td>${esc(fmtDate(fromDayKey(k)))}</td><td>${m ? `${m.sys}/${m.dia} <span class="muted">(${m.pulse ?? '–'})</span>` : '–'}</td><td>${e ? `${e.sys}/${e.dia} <span class="muted">(${e.pulse ?? '–'})</span>` : '–'}</td><td>${x.map(r => r.sys + '/' + r.dia).join(', ') || ''}</td><td>${esc([...new Set(notes)].join(', '))}</td></tr>`;
   }).join('');
   const first = new Date(list[0].ts), last = new Date(list[list.length - 1].ts);
   $('#report-body').innerHTML = `
-    <h2 id="report-title">Blood pressure report</h2>
-    <p class="muted" style="margin:0 0 12px">${state.settings.name ? esc(state.settings.name) + ' · ' : ''}${esc(fmtDate(first))} to ${esc(fmtDate(last))} · ${list.length} readings on ${groups.size} days${hasExamples() ? ' · <strong>includes example data</strong>' : ''}</p>
+    <h2 id="report-title">${t('reportTitle')}</h2>
+    <p class="muted" style="margin:0 0 12px">${state.settings.name ? esc(state.settings.name) + ' · ' : ''}${esc(t('reportRange', fmtDate(first), fmtDate(last), plural('readings', list.length), plural('days', groups.size)))}${hasExamples() ? ` · <strong>${t('includesExamples')}</strong>` : ''}</p>
     <dl class="kv" style="margin:0 0 14px">
-      <div><dt>Overall average</dt><dd>${a.sys}/${a.dia}</dd></div>
-      <div><dt>Morning average</dt><dd>${am ? am.sys + '/' + am.dia : '–'}</dd></div>
-      <div><dt>Evening average</dt><dd>${ae ? ae.sys + '/' + ae.dia : '–'}</dd></div>
+      <div><dt>${t('overallAvg')}</dt><dd>${a.sys}/${a.dia}</dd></div>
+      <div><dt>${t('morningAvg')}</dt><dd>${am ? am.sys + '/' + am.dia : '–'}</dd></div>
+      <div><dt>${t('eveningAvg')}</dt><dd>${ae ? ae.sys + '/' + ae.dia : '–'}</dd></div>
     </dl>
-    <p style="margin:0 0 12px">Average category: ${pill(category(a.sys, a.dia))} · Average pulse ${a.pulse ?? '–'} bpm</p>
-    <div class="scroll-x"><table><thead><tr><th>Date</th><th>Morning (pulse)</th><th>Evening (pulse)</th><th>Extra</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="small muted" style="margin-top:12px">Session values are averages of the readings taken in that session. Values in mmHg. Generated by BP Diary on ${esc(fmtDate(new Date()))}.</p>`;
+    <p style="margin:0 0 12px">${t('avgCategory')}: ${pill(category(a.sys, a.dia))} · ${t('avgPulse', a.pulse ?? '–')}</p>
+    <div class="scroll-x"><table><thead><tr><th>${t('thDate')}</th><th>${t('thMorningP')}</th><th>${t('thEveningP')}</th><th>${t('extra')}</th><th>${t('thNotes')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="small muted" style="margin-top:12px">${t('reportFoot', esc(fmtDate(new Date())))}</p>`;
   $('#report-print').hidden = inFrame;
   $('#report-overlay').hidden = false;
 }
@@ -1010,7 +1147,6 @@ $('#report-print').addEventListener('click', () => window.print());
 /* ---------- Add / edit sheet ---------- */
 let editing = null;
 const form = $('#reading-form');
-$('#f-tags').innerHTML = TAG_KEYS.map(t => `<button type="button" data-v="${t}" aria-pressed="false">${L.tags[t]}</button>`).join('');
 function setSeg(id, v) { $$(`#${id} button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
 function getSeg(id) { const b = $(`#${id} button[aria-pressed="true"]`); return b ? b.dataset.v : ''; }
 ['f-session', 'f-arm', 'f-pos'].forEach(id => $('#' + id).addEventListener('click', e => { const b = e.target.closest('button'); if (b) setSeg(id, b.dataset.v); }));
@@ -1025,7 +1161,7 @@ function openSheet(opts = {}) {
   editing = opts.id ? state.readings.find(r => r.id === opts.id) : null;
   const r = editing;
   const now = new Date();
-  $('#sheet-title').textContent = r ? 'Edit reading' : 'New reading';
+  $('#sheet-title').textContent = t(r ? 'editReading' : 'newReading');
   $('#f-sys').value = r ? r.sys : '';
   $('#f-dia').value = r ? r.dia : '';
   $('#f-pulse').value = r && r.pulse ? r.pulse : '';
@@ -1039,7 +1175,7 @@ function openSheet(opts = {}) {
   $('#f-note').value = r ? r.note || '' : '';
   $('#f-err').textContent = '';
   $('#f-delete').hidden = !r;
-  $('#f-delete').textContent = 'Delete reading';
+  $('#f-delete').textContent = t('deleteReading');
   delete $('#f-delete').dataset.armed;
   $('#f-save-more').hidden = !!r;
   $('#f-tip').hidden = !!r;
@@ -1055,12 +1191,12 @@ function readForm() {
   const sys = parseInt($('#f-sys').value, 10), dia = parseInt($('#f-dia').value, 10);
   const pulseRaw = $('#f-pulse').value.trim(), pulse = pulseRaw ? parseInt(pulseRaw, 10) : null;
   const when = new Date($('#f-when').value);
-  if (!(sys >= 60 && sys <= 300)) return { error: 'Enter a systolic value between 60 and 300.' };
-  if (!(dia >= 30 && dia <= 200)) return { error: 'Enter a diastolic value between 30 and 200.' };
-  if (dia >= sys) return { error: 'Diastolic (bottom number) should be lower than systolic (top number).' };
-  if (pulse !== null && !(pulse >= 25 && pulse <= 250)) return { error: 'Enter a pulse between 25 and 250, or leave it empty.' };
-  if (isNaN(when)) return { error: 'Choose a date and time.' };
-  if (when.getTime() > Date.now() + 5 * 6e4) return { error: "The date and time can't be in the future." };
+  if (!(sys >= 60 && sys <= 300)) return { error: t('errSys') };
+  if (!(dia >= 30 && dia <= 200)) return { error: t('errDia') };
+  if (dia >= sys) return { error: t('errOrder') };
+  if (pulse !== null && !(pulse >= 25 && pulse <= 250)) return { error: t('errPulse') };
+  if (isNaN(when)) return { error: t('errWhen') };
+  if (when.getTime() > Date.now() + 5 * 6e4) return { error: t('errFuture') };
   return { sys, dia, pulse, ts: when.getTime(), session: getSeg('f-session') || sessionFor(when), arm: getSeg('f-arm'), position: getSeg('f-pos'),
     tags: $$('#f-tags button[aria-pressed="true"]').map(b => b.dataset.v), irregular: $('#f-irr').checked, note: $('#f-note').value.trim().slice(0, 500) };
 }
@@ -1068,12 +1204,12 @@ function readForm() {
 function save(another) {
   const v = readForm();
   if (v.error) { $('#f-err').textContent = v.error; return; }
-  if (editing) { Object.assign(editing, v); toast('Reading updated'); }
+  if (editing) { Object.assign(editing, v); toast(t('updated')); }
   else {
     const hadExamples = hasExamples();
     if (hadExamples) state.readings = state.readings.filter(r => r.source !== 'example');
     state.readings.push({ id: uid(), source: 'manual', ...v });
-    toast(hadExamples ? 'Saved. Example readings removed.' : 'Reading saved');
+    toast(t(hadExamples ? 'savedEx' : 'readingSaved'));
   }
   persist();
   const keep = { session: v.session, tags: v.tags };
@@ -1084,9 +1220,9 @@ form.addEventListener('submit', e => { e.preventDefault(); save(false); });
 $('#f-save-more').addEventListener('click', () => save(true));
 $('#f-delete').addEventListener('click', e => {
   const b = e.currentTarget;
-  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; return; }
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = t('tapDelete'); return; }
   state.readings = state.readings.filter(r => r !== editing);
-  persist(); closeSheet(); render(); toast('Reading deleted');
+  persist(); closeSheet(); render(); toast(t('readingDeleted'));
 });
 
 /* ---------- Delegated actions ---------- */
@@ -1098,7 +1234,7 @@ document.addEventListener('click', e => {
   else if (act === 'edit') openSheet({ id: el.dataset.id });
   else if (act === 'range') { trendDays = +el.dataset.days; renderTrends(); }
   else if (act === 'more-history') { historyLimit += 30; renderHistory(); }
-  else if (act === 'clear-examples') { state.readings = state.readings.filter(r => r.source !== 'example'); persist(); render(); toast('Examples cleared'); }
+  else if (act === 'clear-examples') { state.readings = state.readings.filter(r => r.source !== 'example'); persist(); render(); toast(t('examplesCleared')); }
   else if (act === 'report') openReport();
   else if (act === 'export-csv') saveFile(`bp-diary-${dayKey(new Date())}.csv`, csvOf(state.readings), 'text/csv');
   else if (act === 'backup') saveFile(`bp-diary-backup-${dayKey(new Date())}.json`, JSON.stringify(state, null, 1), 'application/json');
@@ -1106,11 +1242,11 @@ document.addEventListener('click', e => {
   else if (act === 'import-confirm') {
     const n = importPreview.ok.length;
     state.readings = state.readings.filter(r => r.source !== 'example').concat(importPreview.ok);
-    importPreview = null; importRows = null; persist(); render(); toast(`Imported ${n} readings`);
+    importPreview = null; importRows = null; persist(); render(); toast(t('imported', n));
   }
   else if (act === 'clear-all') {
-    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to delete everything'; return; }
-    state.readings = []; persist(); render(); toast('All readings deleted');
+    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = t('tapDeleteAll'); return; }
+    state.readings = []; persist(); render(); toast(t('allDeleted'));
   }
 });
 
@@ -1118,7 +1254,7 @@ window.addEventListener('resize', () => { if (current === 'trends') { const list
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
 // Exposed for tests and future modules
-window.BPD = { parseCSV, buildImport, parseDateTime, category, get state() { return state; } };
+window.BPD = { parseCSV, buildImport, parseDateTime, category, STR, get state() { return state; } };
 
 if ('serviceWorker' in navigator && !inFrame && /^https:|^http:\/\/localhost/.test(location.href)) {
   // Auto-update: check for a new version whenever the app comes back to the screen,

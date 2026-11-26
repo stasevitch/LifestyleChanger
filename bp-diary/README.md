@@ -9,6 +9,7 @@ Personal blood pressure diary. Installable web app (PWA) for iPhone and Android;
 - Trends: 7 / 30 / 90 days / all, daily-average chart, morning vs evening, category mix, tag patterns.
 - Doctor report (print or save as PDF), CSV export, JSON backup and restore.
 - CSV import from OMRON connect and other monitor apps (auto-detects columns, delimiters, date order; skips duplicates).
+- Languages: English (main) and Russian, switchable under More → Preferences. Strings live in the `STR` table in `src/app.html`; add a language by adding a table.
 - Date format (device, DD.MM.YYYY, MM/DD/YYYY, YYYY-MM-DD) and 12/24-hour time.
 - Works fully offline once installed.
 
@@ -18,6 +19,7 @@ Personal blood pressure diary. Installable web app (PWA) for iPhone and Android;
 - `tools/ocr-bench/` – paused photo-scan experiment (on-phone monitor reader and its benchmark), kept for later.
 - `build.py` – produces `dist/` (the deployable site). `make_icons.py` redraws icons.
 - `test/e2e.js` – Playwright end-to-end check on an emulated iPhone.
+- `test/lang.js` – switches to Russian and checks every screen for untranslated text.
 
 ## Build and run
 ```
