@@ -400,6 +400,7 @@ const STR = {
     storageWarn: 'Storage is unavailable in this browser, so nothing will be kept after you close it.',
     backup: 'Back up', restore: 'Restore backup', deleteAll: 'Delete all readings', tapDeleteAll: 'Tap again to delete everything',
     installTitle: 'Install on iPhone', installText: "Open this page in Safari, tap the Share button, then <strong>Add to Home Screen</strong>. BP Diary then opens like an app, works offline, and keeps your data safe from Safari's storage clean-up.",
+    installTitleAndroid: 'Install on Android', installTextAndroid: 'Open this page in Chrome, tap the menu (⋮) in the top right corner, then <strong>Install app</strong> or <strong>Add to Home screen</strong>. BP Diary then opens like an app and works offline.',
     categoriesTitle: 'Blood pressure categories',
     scale: { normal: 'below 120 and below 80', elevated: '120–129 and below 80', stage1: '130–139 or 80–89', stage2: '140+ or 90+', severe: 'above 180 and/or above 120', low: 'below 90 or below 60' },
     catsNote: 'Adult categories from the American College of Cardiology and American Heart Association guideline. "Low" is shown for information only. Your doctor may set different targets for you.',
@@ -466,6 +467,7 @@ const STR = {
     storageWarn: 'Хранилище в этом браузере недоступно, поэтому данные не сохранятся после закрытия.',
     backup: 'Резервная копия', restore: 'Восстановить копию', deleteAll: 'Удалить все измерения', tapDeleteAll: 'Нажмите ещё раз, чтобы удалить всё',
     installTitle: 'Установка на iPhone', installText: 'Откройте эту страницу в Safari, нажмите «Поделиться», затем <strong>«На экран „Домой“»</strong>. Дневник будет открываться как приложение, работать без интернета, а данные не удалятся при очистке Safari.',
+    installTitleAndroid: 'Установка на Android', installTextAndroid: 'Откройте эту страницу в Chrome, нажмите меню (⋮) в правом верхнем углу, затем <strong>«Установить приложение»</strong> или <strong>«Добавить на главный экран»</strong>. Дневник будет открываться как приложение и работать без интернета.',
     categoriesTitle: 'Категории давления',
     scale: { normal: 'ниже 120 и ниже 80', elevated: '120–129 и ниже 80', stage1: '130–139 или 80–89', stage2: 'от 140 или от 90', severe: 'выше 180 и/или выше 120', low: 'ниже 90 или ниже 60' },
     catsNote: 'Категории для взрослых по рекомендациям Американской коллегии кардиологов и Американской кардиологической ассоциации. «Пониженное» показывается только для информации. Врач может назначить вам другие целевые значения.',
@@ -531,7 +533,7 @@ function persist() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); }
   catch (e) { storageOK = false; toast(t('storageFail')); }
 }
-const DEFAULT_SETTINGS = { lang: 'en', dateFormat: 'auto', timeFormat: 'auto', name: '', defaultArm: 'left' };
+const DEFAULT_SETTINGS = { lang: '', dateFormat: 'auto', timeFormat: 'auto', name: '', defaultArm: 'left' };
 let state = null;
 function initState() {
   state = readStore();
@@ -540,6 +542,11 @@ function initState() {
     persist();
   }
   state.settings = { ...DEFAULT_SETTINGS, ...(state.settings || {}) };
+  // Language: a link like ?lang=ru sets it; otherwise keep the saved choice; on first start use
+  // the phone's language when we have it (Russian), else English.
+  const urlLang = new URLSearchParams(location.search).get('lang');
+  if (urlLang && STR[urlLang]) { state.settings.lang = urlLang; persist(); }
+  else if (!state.settings.lang) { state.settings.lang = /^ru\b/i.test(navigator.language || '') ? 'ru' : 'en'; persist(); }
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
 }
 
@@ -955,8 +962,9 @@ function renderMore() {
       <button class="btn danger hold" type="button" id="clear-all"><span>${t('deleteAll')}</span></button>
     </div>
 
-    ${!standalone && !inFrame ? `<h2 class="sec">${t('installTitle')}</h2>
-    <div class="card prose"><p>${t('installText')}</p></div>` : ''}
+    ${!standalone && !inFrame ? (/Android/i.test(navigator.userAgent) ? `<h2 class="sec">${t('installTitleAndroid')}</h2>
+    <div class="card prose"><p>${t('installTextAndroid')}</p></div>` : `<h2 class="sec">${t('installTitle')}</h2>
+    <div class="card prose"><p>${t('installText')}</p></div>`) : ''}
 
     <h2 class="sec">${t('categoriesTitle')}</h2>
     <div class="card">
