@@ -2,7 +2,7 @@
 
 A workout app for gym beginners: log every exercise and workout, watch your progress grow, and find out what a machine is called and how to use it. Installable web app (PWA) for iPhone and Android. No server and no account: data stays on the phone.
 
-This is a standalone project. It is kept in this folder until it gets its own repository; the folder is laid out to be that repository's root.
+Part of LifestyleChanger: built and published with the rest of the site by the repository's `.github/workflows/pages.yml`, at `/gym-guide/`.
 
 ## Features
 **Workout log**
@@ -31,7 +31,6 @@ This is a standalone project. It is kept in this folder until it gets its own re
 - `public/`: manifest, service worker, icons (`make_icons.py` redraws them; a placeholder for now).
 - `build.py`: produces `dist/`.
 - `test/e2e.js`: machine identifier walk-through. `test/tracker.js`: logs a workout on top of 8 weeks of seeded history and checks records, charts, editing, units and backup. Run either with `node test/<name>.js <screenshot-dir> [light|dark]`.
-- `.github/workflows/pages.yml`: deploys to GitHub Pages once this is its own repository.
 
 ## Build and run
 ```
