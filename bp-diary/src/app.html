@@ -190,27 +190,6 @@ form.reading { display: grid; gap: 14px; }
 .check { display: flex; gap: 10px; align-items: center; font-size: .92rem; }
 .check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .err { color: var(--c-stage2); font-size: .88rem; min-height: 1.2em; margin: 0; }
-.sheet .lib-link { justify-self: center; padding: 0; margin-top: -6px; font-size: .95rem; }
-.scan-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 1.5px dashed var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 14px; padding: 12px; font-weight: 600; }
-.scan-btn svg { width: 20px; height: 20px; }
-.scan-status { display: flex; gap: 12px; align-items: center; background: var(--surface-2); border-radius: 14px; padding: 10px; }
-.scan-status img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; flex: none; background: var(--line); }
-.scan-status .msg { font-size: .9rem; min-width: 0; }
-.scan-status .msg strong { display: block; }
-.scan-status.warn { background: color-mix(in srgb, var(--c-elevated) 14%, var(--surface)); }
-.scan-status.bad { background: color-mix(in srgb, var(--c-stage2) 12%, var(--surface)); }
-.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; vertical-align: -2px; margin-right: 6px; }
-@media (prefers-reduced-motion: no-preference) { .spinner { animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } } }
-.field input.ai-filled, .ai-filled { border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-.field input.ai-unsure, .ai-unsure { border-color: var(--c-stage1) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-stage1) 22%, transparent); }
-.photo-full { width: 100%; border-radius: 12px; display: block; }
-.frame-overlay { align-items: center; background: rgba(8,14,20,.88); }
-.frame-box { width: 100%; max-width: 560px; display: grid; gap: 12px; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); color: #fff; }
-.frame-box p { margin: 0; text-align: center; font-weight: 600; }
-.frame-stage { position: relative; justify-self: center; touch-action: none; user-select: none; -webkit-user-select: none; line-height: 0; }
-.frame-stage canvas { max-width: 100%; max-height: 66vh; border-radius: 10px; display: block; }
-.frame-rect { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); border-radius: 4px; pointer-events: none; }
-.scan-status .btn.link { padding: 4px 0 0; font-size: .92rem; }
 .tip { font-size: .82rem; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
 textarea { width: 100%; resize: vertical; min-height: 60px; }
 
@@ -234,7 +213,6 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
   body { background: #fff; color: #000; }
 }
 </style>
-<script src="bpocr.js" defer></script>
 <!-- /head -->
 
 <header class="top" id="top">
@@ -275,11 +253,6 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
       <button class="btn link" type="button" id="sheet-cancel">Cancel</button>
     </div>
     <form class="reading" id="reading-form" novalidate>
-      <button type="button" class="scan-btn" id="scan-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>Scan monitor with camera</button>
-      <button type="button" class="btn link lib-link" id="scan-lib-btn">or choose a photo you already took</button>
-      <input type="file" id="scan-file" accept="image/*" capture="environment" hidden>
-      <input type="file" id="scan-lib" accept="image/*" hidden>
-      <div class="scan-status" id="scan-status" hidden><img id="scan-thumb" alt="Photo of the monitor"><div class="msg" id="scan-msg"></div></div>
       <div class="big-inputs">
         <label class="field"><span>Systolic</span><input class="big" id="f-sys" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="120" autocomplete="off"></label>
         <div class="slash">/</div>
@@ -315,15 +288,6 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
       <button class="btn danger block" type="button" id="f-delete" hidden>Delete reading</button>
       <p class="tip" id="f-tip">Sit quietly for 5 minutes, feet flat, arm resting at heart level. Take 2 readings 1 minute apart. Both count toward this session's average.</p>
     </form>
-  </div>
-</div>
-
-<!-- Frame the numbers on a photo -->
-<div class="overlay frame-overlay" id="frame-overlay" hidden>
-  <div class="frame-box" role="dialog" aria-modal="true" aria-labelledby="frame-title">
-    <p id="frame-title">Drag your finger across the numbers to frame them</p>
-    <div class="frame-stage" id="frame-stage"><canvas id="frame-canvas"></canvas><div class="frame-rect" id="frame-rect" hidden></div></div>
-    <div class="btn-row"><button class="btn" type="button" id="frame-cancel">Cancel</button><button class="btn primary" type="button" id="frame-read" disabled>Read these numbers</button></div>
   </div>
 </div>
 
@@ -1074,19 +1038,18 @@ function openSheet(opts = {}) {
   $('#f-irr').checked = r ? !!r.irregular : false;
   $('#f-note').value = r ? r.note || '' : '';
   $('#f-err').textContent = '';
-  resetScan(!!r);
   $('#f-delete').hidden = !r;
   $('#f-delete').textContent = 'Delete reading';
   delete $('#f-delete').dataset.armed;
   $('#f-save-more').hidden = !!r;
   $('#f-tip').hidden = !!r;
   $('#sheet-overlay').hidden = false;
-  if (!r && !opts.fromScan) setTimeout(() => $('#f-sys').focus(), 60);
+  if (!r) setTimeout(() => $('#f-sys').focus(), 60);
 }
 function closeSheet() { $('#sheet-overlay').hidden = true; editing = null; }
 $('#sheet-cancel').addEventListener('click', closeSheet);
 $('#sheet-overlay').addEventListener('click', e => { if (e.target.id === 'sheet-overlay') closeSheet(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#frame-overlay').hidden) { closeFrame(); return; } closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); $('#report-overlay').hidden = true; $('#text-overlay').hidden = true; } });
 
 function readForm() {
   const sys = parseInt($('#f-sys').value, 10), dia = parseInt($('#f-dia').value, 10);
@@ -1109,7 +1072,7 @@ function save(another) {
   else {
     const hadExamples = hasExamples();
     if (hadExamples) state.readings = state.readings.filter(r => r.source !== 'example');
-    state.readings.push({ id: uid(), source: scanUsed ? 'photo' : 'manual', ...v });
+    state.readings.push({ id: uid(), source: 'manual', ...v });
     toast(hadExamples ? 'Saved. Example readings removed.' : 'Reading saved');
   }
   persist();
@@ -1124,198 +1087,6 @@ $('#f-delete').addEventListener('click', e => {
   if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; return; }
   state.readings = state.readings.filter(r => r !== editing);
   persist(); closeSheet(); render(); toast('Reading deleted');
-});
-
-/* ---------- Camera scan (on this phone, no internet) ---------- */
-// The photo is read by bpocr.js right here on the device: it finds the seven-segment
-// digits on the monitor's screen. Nothing is uploaded.
-let scanUsed = false;
-try { localStorage.removeItem('bpdiary.apikey'); } catch (e) {} // key left over from the earlier cloud scan
-
-async function loadPhoto(file) {
-  let bmp;
-  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } // honour the photo's "this way up" tag
-  catch (e) { bmp = await createImageBitmap(file); }
-  const max = 1600, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-  const c = document.createElement('canvas');
-  c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
-  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-  if (bmp.close) bmp.close();
-  return { canvas: c, thumb: c.toDataURL('image/jpeg', 0.7) };
-}
-
-function rotated(src, quarterTurns) {
-  const c = document.createElement('canvas'), odd = quarterTurns % 2 === 1;
-  c.width = odd ? src.height : src.width; c.height = odd ? src.width : src.height;
-  const g = c.getContext('2d'); g.translate(c.width / 2, c.height / 2); g.rotate(quarterTurns * Math.PI / 2);
-  g.drawImage(src, -src.width / 2, -src.height / 2); return c;
-}
-// The reader tries the whole photo, the area where digits cluster, and a few crops, and keeps
-// the most confident result. If nothing is found the photo may be sideways or upside down.
-function readPhoto(canvas) {
-  if (!window.BPOCR) return null;
-  for (const turns of [0, 1, 3, 2]) {
-    try { const r = BPOCR.readPhoto(turns ? rotated(canvas, turns) : canvas); if (r) return r; } catch (e) {}
-  }
-  return null;
-}
-
-function setScanStatus(kind, html, img) {
-  const box = $('#scan-status');
-  box.hidden = false;
-  box.className = 'scan-status' + (kind ? ' ' + kind : '');
-  if (img) $('#scan-thumb').src = img;
-  $('#scan-msg').innerHTML = html;
-}
-function clearMarks() { $$('#reading-form .ai-filled, #reading-form .ai-unsure').forEach(el => el.classList.remove('ai-filled', 'ai-unsure')); }
-function resetScan(editingExisting) {
-  scanUsed = false;
-  clearMarks();
-  $('#scan-status').hidden = true;
-  $('#scan-msg').textContent = '';
-  lastScan = null;
-  $('#scan-thumb').removeAttribute('src');
-  $('#scan-btn').hidden = $('#scan-lib-btn').hidden = !!editingExisting || inFrame;
-}
-function startScan(fromLibrary) { $(fromLibrary ? '#scan-lib' : '#scan-file').click(); }
-$('#scan-btn').addEventListener('click', () => startScan(false));
-$('#scan-lib-btn').addEventListener('click', () => startScan(true));
-
-// When a photo was taken, from its EXIF data (JPEG). Returns a Date or null.
-async function photoTakenAt(file) {
-  try {
-    const buf = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
-    if (buf.getUint16(0) !== 0xFFD8) return null;
-    let off = 2;
-    while (off + 4 < buf.byteLength) {
-      const marker = buf.getUint16(off), size = buf.getUint16(off + 2);
-      if (marker === 0xFFE1 && buf.getUint32(off + 4) === 0x45786966) { // "Exif"
-        const t = off + 10, le = buf.getUint16(t) === 0x4949;
-        const u16 = o => buf.getUint16(t + o, le), u32 = o => buf.getUint32(t + o, le);
-        const str = (o, n) => { let r = ''; for (let i = 0; i < n - 1; i++) r += String.fromCharCode(buf.getUint8(t + o + i)); return r; };
-        const readIfd = o => { const out = {}; const n = u16(o); for (let i = 0; i < n; i++) { const e = o + 2 + i * 12; out[u16(e)] = { count: u32(e + 4), val: u32(e + 8) }; } return out; };
-        const ifd0 = readIfd(u32(4));
-        let tag = null;
-        if (ifd0[0x8769]) { const ex = readIfd(ifd0[0x8769].val); tag = ex[0x9003] || ex[0x9004]; }
-        tag = tag || ifd0[0x0132];
-        if (!tag) return null;
-        const m = str(tag.val, tag.count).match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/);
-        if (!m) return null;
-        const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
-        return isNaN(d) ? null : d;
-      }
-      if ((marker & 0xFF00) !== 0xFF00) return null;
-      off += 2 + size;
-    }
-  } catch (e) {}
-  return null;
-}
-
-$('#scan-file').addEventListener('change', e => onScanFile(e, false));
-$('#scan-lib').addEventListener('change', e => onScanFile(e, true));
-let lastScan = null; // { file, fromLibrary, canvas, thumb } for framing again
-async function onScanFile(e, fromLibrary) {
-  const file = e.target.files && e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  if ($('#sheet-overlay').hidden) openSheet({ fromScan: true });
-  $('#f-err').textContent = '';
-  clearMarks();
-  let photo;
-  try { photo = await loadPhoto(file); }
-  catch (err) { setScanStatus('bad', "<strong>Couldn't open that photo.</strong>Try taking it again."); return; }
-  lastScan = { file, fromLibrary, canvas: photo.canvas, thumb: photo.thumb };
-  setScanStatus('', '<strong><span class="spinner"></span>Reading the numbers…</strong>', photo.thumb);
-  await new Promise(r => setTimeout(r, 30)); // let the status paint before the work starts
-  const r = readPhoto(photo.canvas);
-  if (!r) {
-    setScanStatus('bad', '<strong>Couldn\'t find the numbers in this photo.</strong>Frame them with your finger, or type them in.<button type="button" class="btn link" data-act="frame">Frame the numbers</button>');
-    if (fromLibrary) openFrame(); // older photos are usually zoomed out: go straight to framing
-    return;
-  }
-  await applyScan(r);
-}
-
-async function applyScan(r) {
-  const { file, fromLibrary } = lastScan;
-  clearMarks();
-  const unsure = new Set(r.unsure || []);
-  const fill = (id, v, key) => { const el = $(id); el.value = v == null ? '' : v; if (v != null) el.classList.add(unsure.has(key) ? 'ai-unsure' : 'ai-filled'); };
-  fill('#f-sys', r.systolic, 'systolic');
-  fill('#f-dia', r.diastolic, 'diastolic');
-  fill('#f-pulse', r.pulse, 'pulse');
-
-  // Date and time: a fresh camera photo is "now"; a library photo uses the time it was taken.
-  const taken = await photoTakenAt(file);
-  const shot = taken || (fromLibrary ? null : new Date());
-  const when = !shot || isNaN(shot) || shot > new Date() ? new Date() : shot;
-  const timeUnknown = !shot;
-  $('#f-when').value = toLocalInput(when);
-  $('#f-when').classList.add(timeUnknown ? 'ai-unsure' : 'ai-filled');
-  setSeg('f-session', sessionFor(when));
-  scanUsed = true;
-
-  const notes = [];
-  if (unsure.size) notes.push('Orange fields may be misread. Compare them with the photo.');
-  if (!r.pulse) notes.push('Pulse not found. Type it in if your monitor shows it.');
-  if (timeUnknown) notes.push("Couldn't tell when this photo was taken. Set the date and time before saving.");
-  else if (fromLibrary) notes.push('Date and time come from when the photo was taken.');
-  setScanStatus(unsure.size || !r.pulse || timeUnknown ? 'warn' : '',
-    `<strong>Check these numbers against the photo, then save.</strong>${notes.join(' ')}<button type="button" class="btn link" data-act="frame">Wrong numbers? Frame them</button>`, lastScan.thumb);
-  $('#f-sys').scrollIntoView({ block: 'nearest' });
-}
-
-/* Frame the numbers: the user drags a box over the digits; only that area is read. */
-let frameSel = null;
-function openFrame() {
-  if (!lastScan) return;
-  const src = lastScan.canvas, c = $('#frame-canvas');
-  const scale = Math.min(1, 1200 / Math.max(src.width, src.height));
-  c.width = Math.round(src.width * scale); c.height = Math.round(src.height * scale);
-  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
-  frameSel = null; $('#frame-rect').hidden = true; $('#frame-read').disabled = true;
-  $('#frame-overlay').hidden = false;
-}
-function closeFrame() { $('#frame-overlay').hidden = true; }
-(() => {
-  const stage = $('#frame-stage'), rectEl = $('#frame-rect');
-  let start = null;
-  const pos = e => { const b = $('#frame-canvas').getBoundingClientRect();
-    return { x: Math.max(0, Math.min(b.width, e.clientX - b.left)), y: Math.max(0, Math.min(b.height, e.clientY - b.top)), bw: b.width, bh: b.height }; };
-  const draw = (a, b) => { const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.abs(a.x - b.x), h = Math.abs(a.y - b.y);
-    Object.assign(rectEl.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' }); rectEl.hidden = false;
-    frameSel = { x: x / a.bw, y: y / a.bh, w: w / a.bw, h: h / a.bh }; };
-  stage.addEventListener('pointerdown', e => { start = pos(e); stage.setPointerCapture(e.pointerId); e.preventDefault(); });
-  stage.addEventListener('pointermove', e => { if (start) draw(start, pos(e)); });
-  stage.addEventListener('pointerup', e => { if (!start) return; draw(start, pos(e)); start = null;
-    $('#frame-read').disabled = !(frameSel && frameSel.w > 0.04 && frameSel.h > 0.04); });
-})();
-$('#frame-cancel').addEventListener('click', closeFrame);
-$('#frame-read').addEventListener('click', async () => {
-  if (!lastScan || !frameSel) return;
-  const src = lastScan.canvas;
-  // Add a small margin around the user's box, then read only that part (in any orientation).
-  const m = 0.04, x = Math.max(0, frameSel.x - m), y = Math.max(0, frameSel.y - m);
-  const w = Math.min(1 - x, frameSel.w + 2 * m), h = Math.min(1 - y, frameSel.h + 2 * m);
-  const part = document.createElement('canvas');
-  part.width = Math.max(1, Math.round(w * src.width)); part.height = Math.max(1, Math.round(h * src.height));
-  part.getContext('2d').drawImage(src, x * src.width, y * src.height, part.width, part.height, 0, 0, part.width, part.height);
-  closeFrame();
-  setScanStatus('', '<strong><span class="spinner"></span>Reading the numbers…</strong>', lastScan.thumb);
-  await new Promise(r => setTimeout(r, 30));
-  const r = readPhoto(part);
-  if (r) { await applyScan(r); return; }
-  setScanStatus('bad', '<strong>Still couldn\'t read the numbers.</strong>Type them in, or take a new photo straight on and without glare.<button type="button" class="btn link" data-act="frame">Try framing again</button>');
-});
-
-$('#scan-thumb').addEventListener('click', () => {
-  const src = $('#scan-thumb').src;
-  if (!src) return;
-  const box = $('#scan-status');
-  const big = box.querySelector('.photo-full');
-  if (big) { big.remove(); return; }
-  const im = document.createElement('img'); im.src = src; im.className = 'photo-full'; im.alt = 'Photo of the monitor, enlarged';
-  box.style.flexWrap = 'wrap'; box.appendChild(im);
 });
 
 /* ---------- Delegated actions ---------- */
@@ -1337,9 +1108,6 @@ document.addEventListener('click', e => {
     state.readings = state.readings.filter(r => r.source !== 'example').concat(importPreview.ok);
     importPreview = null; importRows = null; persist(); render(); toast(`Imported ${n} readings`);
   }
-  else if (act === 'scan') startScan(false);
-  else if (act === 'scan-lib') startScan(true);
-  else if (act === 'frame') openFrame();
   else if (act === 'clear-all') {
     if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = 'Tap again to delete everything'; return; }
     state.readings = []; persist(); render(); toast('All readings deleted');

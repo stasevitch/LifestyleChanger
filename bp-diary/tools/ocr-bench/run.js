@@ -1,7 +1,7 @@
 // Measures public/bpocr.js on the photos in ./out (made by gen.js, or real photos with a truth.json).
 // Usage: node run.js [auto|crop|full]   auto = how the app reads a whole photo
 const { chromium } = require('playwright'); const http = require('http'), fs = require('fs'), path = require('path');
-const files = { '/bpocr.js': path.join(__dirname, '..', '..', 'public', 'bpocr.js') };
+const files = { '/bpocr.js': path.join(__dirname, 'bpocr.js') };
 const srv = http.createServer((q, s) => {
   const u = decodeURIComponent(q.url.split('?')[0]);
   const p = files[u] || (u.startsWith('/out/') ? path.join(__dirname, u) : null);

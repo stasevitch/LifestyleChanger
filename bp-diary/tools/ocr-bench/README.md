@@ -1,6 +1,8 @@
-# Monitor-reading benchmark
+# Monitor-reading benchmark (paused)
 
-Measures how well `public/bpocr.js` (the on-phone seven-segment reader) reads blood pressure monitor screens.
+Photo scanning was removed from BP Diary on 2026-11-26 because it wasn't reliable enough on real photos; entry is manual only.
+This folder keeps the work for later: `bpocr.js` (an on-phone seven-segment reader), test photo generators, and `samples/`.
+To bring scanning back, start by collecting real monitor photos with their correct values and measure them here.
 
 ```
 cd bp-diary/tools/ocr-bench

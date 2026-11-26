@@ -10,17 +10,14 @@ Personal blood pressure diary. Installable web app (PWA) for iPhone and Android;
 - Doctor report (print or save as PDF), CSV export, JSON backup and restore.
 - CSV import from OMRON connect and other monitor apps (auto-detects columns, delimiters, date order; skips duplicates).
 - Date format (device, DD.MM.YYYY, MM/DD/YYYY, YYYY-MM-DD) and 12/24-hour time.
-- Camera scan: photograph a monitor's screen (camera or photo library) and systolic, diastolic and pulse are filled in for you to confirm. Reading happens on the phone (`public/bpocr.js`, a seven-segment digit reader): no internet, no AI service, photos never leave the device. Uncertain values are highlighted.
 - Works fully offline once installed.
 
 ## Project layout
 - `src/app.html` – the whole app (markup, styles, script). Edit this.
 - `public/` – manifest, service worker, icons.
-- `public/bpocr.js` – on-phone reader for seven-segment monitor screens.
-- `tools/ocr-bench/` – generates test photos and measures the reader's accuracy.
+- `tools/ocr-bench/` – paused photo-scan experiment (on-phone monitor reader and its benchmark), kept for later.
 - `build.py` – produces `dist/` (the deployable site). `make_icons.py` redraws icons.
 - `test/e2e.js` – Playwright end-to-end check on an emulated iPhone.
-- `test/scan.js` – camera-scan flow with sample monitor photos in `test/fixtures/`.
 
 ## Build and run
 ```
