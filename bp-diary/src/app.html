@@ -201,6 +201,10 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 
 /* Report */
 .report { background: var(--surface); color: var(--ink); }
+#report-pages { display: grid; gap: 12px; margin: 4px 0 12px; }
+.report-page { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--line); box-shadow: var(--shadow); background: #fff; }
+.report-actions { position: sticky; bottom: 0; background: var(--surface); padding-block: 10px calc(4px + env(safe-area-inset-bottom, 0px)); }
+.report .sheet-head { gap: 10px; flex-wrap: wrap; }
 .report h2 { font-family: var(--font-num); margin: 0 0 4px; font-size: 1.3rem; }
 .report table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
 .report th, .report td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }
@@ -309,11 +313,15 @@ textarea { width: 100%; resize: vertical; min-height: 60px; }
 <!-- Doctor report -->
 <div class="overlay report-overlay" id="report-overlay" hidden>
   <div class="sheet report" role="dialog" aria-modal="true" aria-labelledby="report-title">
-    <div class="sheet-head no-print">
-      <button class="btn link" type="button" id="report-print" data-i18n="printPdf">Print or save PDF</button>
+    <div class="sheet-head">
+      <div class="chips" id="report-range" role="group"></div>
       <button class="btn link" type="button" id="report-close" data-i18n="close">Close</button>
     </div>
-    <div id="report-body"></div>
+    <div id="report-pages"></div>
+    <div class="btn-row report-actions">
+      <button class="btn primary" type="button" id="report-pdf" data-i18n="savePdf" disabled>Save PDF</button>
+      <button class="btn" type="button" id="report-png" data-i18n="saveImage" disabled>Save as image</button>
+    </div>
   </div>
 </div>
 
@@ -383,6 +391,10 @@ const STR = {
     updated: 'Reading updated', savedEx: 'Saved. Example readings removed.', readingSaved: 'Reading saved', readingDeleted: 'Reading deleted',
     examplesCleared: 'Examples cleared', allDeleted: 'All readings deleted',
     readings: { one: '# reading', other: '# readings' }, days: { one: '# day', other: '# days' },
+    d14: '14 days', rpPeriod: 'Period', rpColSub: 'BP (mmHg) · pulse (bpm)', rpAvgPulse: 'Average pulse', rpHighLegend: 'Shaded: 140/90 or higher',
+    rpMethod: 'Each value is the average of the readings taken in that session; ×2 means two readings were averaged. IHB: the monitor showed an irregular heartbeat.',
+    rpExtra: 'extra', rpGenerated: d => `BP Diary · created ${d}`, rpPage: (a, b) => `Page ${a} of ${b}`,
+    savePdf: 'Save PDF', saveImage: 'Save as image', preparing: 'Preparing the report…',
   },
   ru: {
     appName: 'Дневник давления', tabToday: 'Сегодня', tabHistory: 'История', tabTrends: 'Динамика', tabMore: 'Ещё', mainNav: 'Главное меню', addReading: 'Добавить измерение',
@@ -442,6 +454,10 @@ const STR = {
     examplesCleared: 'Примеры удалены', allDeleted: 'Все измерения удалены',
     readings: { one: '# измерение', few: '# измерения', many: '# измерений', other: '# измерения' },
     days: { one: '# день', few: '# дня', many: '# дней', other: '# дня' },
+    d14: '14 дней', rpPeriod: 'Период', rpColSub: 'АД (мм рт. ст.) · пульс (уд/мин)', rpAvgPulse: 'Средний пульс', rpHighLegend: 'Выделено: 140/90 и выше',
+    rpMethod: 'Каждое значение — среднее из измерений за это время суток; ×2 означает среднее из двух измерений. «Аритмия»: тонометр показал нерегулярный пульс.',
+    rpExtra: 'доп.', rpGenerated: d => `«Дневник давления» · создан ${d}`, rpPage: (a, b) => `Стр. ${a} из ${b}`,
+    savePdf: 'Сохранить PDF', saveImage: 'Сохранить как изображение', preparing: 'Готовим отчёт…',
   },
 };
 let lang = 'en';
@@ -1114,35 +1130,237 @@ function onRestoreFile(e) {
   e.target.value = '';
 }
 
-/* ---------- Doctor report ---------- */
-function openReport() {
-  const days = trendDays || 0;
+// Older iPhones (before iOS 16) have no roundRect; plain corners are fine there.
+if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+/* ---------- Doctor report: journal table drawn as A4 pages, saved as PDF or image ---------- */
+// Pages are drawn on canvas (any language renders correctly), then wrapped into a PDF on the
+// phone. Files are prepared when the report opens so the share sheet opens instantly on tap
+// (iPhone only allows sharing right after a tap, and home-screen apps can't print).
+const RP = { W: 1240, H: 1754, M: 72, rowH: 54 };
+const RC = { ink: '#13212c', muted: '#5a6b78', accent: '#1d5c8c', head: '#1f5272', headInk: '#ffffff', alt: '#eef4f8', line: '#d3dde4', high: '#fbe1dd', severe: '#f5c4be', boxBg: '#e7f0f7', noteBg: '#fff6e6', noteLine: '#f0c987' };
+const RF = { ui: '"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', num: '"Sora", "Figtree", system-ui, -apple-system, sans-serif' };
+let reportDays = 30, reportFiles = null;
+
+function reportData(days) {
   const list = inRange(days).sort((a, b) => a.ts - b.ts);
-  if (!list.length) { toast(t('noPeriod')); return; }
-  const a = average(list), am = average(list.filter(r => r.session === 'morning')), ae = average(list.filter(r => r.session === 'evening'));
+  if (!list.length) return null;
   const groups = byDay(list);
-  const rows = Array.from(groups.entries()).map(([k, l]) => {
-    const m = average(l.filter(r => r.session === 'morning')), e = average(l.filter(r => r.session === 'evening')), x = l.filter(r => r.session === 'extra');
-    const notes = l.flatMap(r => [...(r.tags || []).map(k => L.tags[k]), r.irregular ? t('ihb') : '', r.note]).filter(Boolean);
-    return `<tr><td>${esc(fmtDate(fromDayKey(k)))}</td><td>${m ? `${m.sys}/${m.dia} <span class="muted">(${m.pulse ?? '–'})</span>` : '–'}</td><td>${e ? `${e.sys}/${e.dia} <span class="muted">(${e.pulse ?? '–'})</span>` : '–'}</td><td>${x.map(r => r.sys + '/' + r.dia).join(', ') || ''}</td><td>${esc([...new Set(notes)].join(', '))}</td></tr>`;
-  }).join('');
-  const first = new Date(list[0].ts), last = new Date(list[list.length - 1].ts);
-  $('#report-body').innerHTML = `
-    <h2 id="report-title">${t('reportTitle')}</h2>
-    <p class="muted" style="margin:0 0 12px">${state.settings.name ? esc(state.settings.name) + ' · ' : ''}${esc(t('reportRange', fmtDate(first), fmtDate(last), plural('readings', list.length), plural('days', groups.size)))}${hasExamples() ? ` · <strong>${t('includesExamples')}</strong>` : ''}</p>
-    <dl class="kv" style="margin:0 0 14px">
-      <div><dt>${t('overallAvg')}</dt><dd>${a.sys}/${a.dia}</dd></div>
-      <div><dt>${t('morningAvg')}</dt><dd>${am ? am.sys + '/' + am.dia : '–'}</dd></div>
-      <div><dt>${t('eveningAvg')}</dt><dd>${ae ? ae.sys + '/' + ae.dia : '–'}</dd></div>
-    </dl>
-    <p style="margin:0 0 12px">${t('avgCategory')}: ${pill(category(a.sys, a.dia))} · ${t('avgPulse', a.pulse ?? '–')}</p>
-    <div class="scroll-x"><table><thead><tr><th>${t('thDate')}</th><th>${t('thMorningP')}</th><th>${t('thEveningP')}</th><th>${t('extra')}</th><th>${t('thNotes')}</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="small muted" style="margin-top:12px">${t('reportFoot', esc(fmtDate(new Date())))}</p>`;
-  $('#report-print').hidden = inFrame;
-  $('#report-overlay').hidden = false;
+  const first = startOfDay(new Date(list[0].ts)), last = startOfDay(new Date(list[list.length - 1].ts));
+  const rows = [], notes = [];
+  for (let d = new Date(first); d <= last; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
+    const l = groups.get(dayKey(d)) || [];
+    const part = s => { const rs = l.filter(r => r.session === s); const a = average(rs); return a ? { ...a, irr: rs.some(r => r.irregular) } : null; };
+    rows.push({ d, m: part('morning'), e: part('evening') });
+    for (const s of ['morning', 'evening']) {
+      const rs = l.filter(r => r.session === s);
+      const bits = [...new Set(rs.flatMap(r => (r.tags || []).map(k => L.tags[k])))].concat(rs.map(r => r.note).filter(Boolean));
+      if (bits.length) notes.push(`${fmtDate(d, false)} · ${t(s)}: ${bits.join(', ')}`);
+    }
+    for (const r of l.filter(r => r.session === 'extra'))
+      notes.push(`${fmtDate(d, false)} · ${t('rpExtra')} ${fmtTime(new Date(r.ts))}: ${r.sys}/${r.dia}${r.pulse ? ' · ' + r.pulse : ''}${(r.tags || []).length ? ', ' + r.tags.map(k => L.tags[k]).join(', ') : ''}${r.note ? ', ' + r.note : ''}`);
+  }
+  const avg = average(list), am = average(list.filter(r => r.session === 'morning')), ae = average(list.filter(r => r.session === 'evening'));
+  return { list, rows, notes, first, last, avg, am, ae, days: groups.size };
 }
+
+function drawReport(D) {
+  const pages = [];
+  let g, y, pageNo = 0;
+  const font = (w, px, fam = RF.ui) => `${w} ${px}px ${fam}`;
+  const text = (s, x, yy, f, color = RC.ink, align = 'left') => { g.font = f; g.fillStyle = color; g.textAlign = align; g.textBaseline = 'alphabetic'; g.fillText(s, x, yy); };
+  const rrect = (x, yy, w, h, r, fill, stroke) => { g.beginPath(); g.roundRect(x, yy, w, h, r); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 3; g.stroke(); } };
+  const fit = (s, maxW) => { if (g.measureText(s).width <= maxW) return s; while (s.length > 1 && g.measureText(s + '…').width > maxW) s = s.slice(0, -1); return s + '…'; };
+  const W = RP.W, M = RP.M, inner = W - 2 * M, footerY = RP.H - 60;
+  const period = D.first.getFullYear() === D.last.getFullYear() ? `${fmtDate(D.first, false)} – ${fmtDate(D.last)}` : `${fmtDate(D.first)} – ${fmtDate(D.last)}`;
+  // Largest font size (down to min) at which s fits in maxW.
+  const fitSize = (s, weight, fam, max, min, maxW) => { let px = max; for (; px > min; px -= 1) { g.font = font(weight, px, fam); if (g.measureText(s).width <= maxW) break; } return px; };
+
+  const newPage = () => {
+    const c = document.createElement('canvas'); c.width = W; c.height = RP.H;
+    g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, RP.H);
+    pages.push(c); pageNo++;
+    if (pageNo === 1) {
+      // icon: clipboard with a pulse line
+      rrect(M, 56, 96, 110, 18, null, RC.accent); rrect(M + 30, 46, 36, 20, 6, '#fff', RC.accent);
+      g.beginPath(); g.moveTo(M + 16, 118); g.lineTo(M + 36, 118); g.lineTo(M + 46, 96); g.lineTo(M + 58, 140); g.lineTo(M + 68, 118); g.lineTo(M + 80, 118);
+      g.strokeStyle = RC.accent; g.lineWidth = 6; g.lineJoin = 'round'; g.stroke();
+      const bw = 430, bx = W - M - bw, titleW = bx - (M + 124) - 24;
+      rrect(bx, 50, bw, 116, 20, RC.boxBg);
+      text(t('rpPeriod'), bx + 28, 96, font(500, 22), RC.muted);
+      const pp = fitSize(period, 700, RF.num, 30, 20, bw - 56);
+      g.font = font(700, pp, RF.num); text(fit(period, bw - 56), bx + 28, 140, font(700, pp, RF.num));
+      // title: shrink to fit; if still too long, two lines
+      const tp = fitSize(t('reportTitle'), 700, RF.num, 44, 32, titleW);
+      g.font = font(700, tp, RF.num);
+      if (g.measureText(t('reportTitle')).width <= titleW) text(t('reportTitle'), M + 124, 112, font(700, tp, RF.num));
+      else { const w = t('reportTitle').split(' '); let k = w.length - 1; while (k > 1 && (g.font = font(700, 32, RF.num), g.measureText(w.slice(0, k).join(' ')).width > titleW)) k--;
+        text(fit(w.slice(0, k).join(' '), titleW), M + 124, 86, font(700, 32, RF.num)); text(fit(w.slice(k).join(' '), titleW), M + 124, 124, font(700, 32, RF.num)); }
+      g.font = font(500, 24); text(fit([state.settings.name, t('appName')].filter(Boolean).join(' · '), titleW), M + 126, 156, font(500, 24), RC.muted);
+      y = 200;
+      if (hasExamples()) { rrect(M, y, inner, 46, 10, RC.noteBg); text(t('includesExamples'), M + 18, y + 31, font(600, 22), '#8a5a00'); y += 62; }
+      // summary
+      const boxes = [[t('overallAvg'), D.avg ? `${D.avg.sys}/${D.avg.dia}` : '–', L.cats[category(D.avg.sys, D.avg.dia)]],
+        [t('morningAvg'), D.am ? `${D.am.sys}/${D.am.dia}` : '–', ''], [t('eveningAvg'), D.ae ? `${D.ae.sys}/${D.ae.dia}` : '–', ''],
+        [t('rpAvgPulse'), D.avg.pulse ? `${D.avg.pulse}` : '–', plural('readings', D.list.length)]];
+      const gap = 16, bw2 = (inner - gap * 3) / 4;
+      boxes.forEach(([lab, val, sub], i) => {
+        const x = M + i * (bw2 + gap); rrect(x, y, bw2, 128, 16, RC.alt);
+        g.font = font(600, 20); text(fit(lab, bw2 - 36), x + 18, y + 36, font(600, 20), RC.muted);
+        text(val, x + 18, y + 84, font(700, 38, RF.num));
+        if (sub) { g.font = font(500, 19); text(fit(sub, bw2 - 36), x + 18, y + 114, font(500, 19), RC.muted); }
+      });
+      y += 128 + 30;
+    } else {
+      text(t('reportTitle'), M, 92, font(700, 30, RF.num));
+      text(period, W - M, 92, font(600, 24), RC.muted, 'right');
+      y = 124;
+    }
+  };
+
+  const colW = [inner * 0.22, inner * 0.39, inner * 0.39];
+  const colX = [M, M + colW[0], M + colW[0] + colW[1]];
+  const tableHead = () => {
+    const h = 96;
+    g.save(); g.beginPath(); g.roundRect(M, y, inner, h, [16, 16, 0, 0]); g.fillStyle = RC.head; g.fill(); g.restore();
+    text(t('thDate'), colX[0] + colW[0] / 2, y + 58, font(700, 28), RC.headInk, 'center');
+    [['morning', colX[1]], ['evening', colX[2]]].forEach(([s, x], i) => {
+      const cx = x + colW[i + 1] / 2;
+      text(t(s), cx + 18, y + 42, font(700, 28), RC.headInk, 'center');
+      text(t('rpColSub'), cx, y + 76, font(500, 19), '#d7e6f0', 'center');
+      // sun / moon
+      const iy = y + 32; g.font = font(700, 28);
+      const iconX = cx + 18 - g.measureText(t(s)).width / 2 - 26;
+      g.strokeStyle = '#fff'; g.fillStyle = '#fff'; g.lineWidth = 3;
+      if (s === 'morning') { g.beginPath(); g.arc(iconX, iy, 9, 0, Math.PI * 2); g.stroke(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; g.beginPath(); g.moveTo(iconX + Math.cos(a) * 13, iy + Math.sin(a) * 13); g.lineTo(iconX + Math.cos(a) * 17, iy + Math.sin(a) * 17); g.stroke(); } }
+      else { g.beginPath(); g.arc(iconX, iy, 12, 0, Math.PI * 2); g.fill(); g.fillStyle = RC.head; g.beginPath(); g.arc(iconX + 6, iy - 5, 11, 0, Math.PI * 2); g.fill(); }
+      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y + 14); g.lineTo(x, y + h - 14); g.stroke();
+    });
+    y += h;
+  };
+  const cell = (v, x, w, yy) => {
+    if (!v) { text('—', x + w / 2, yy + 36, font(500, 28, RF.num), RC.muted, 'center'); return; }
+    const c = category(v.sys, v.dia);
+    if (c === 'stage2' || c === 'severe') { g.fillStyle = c === 'severe' ? RC.severe : RC.high; g.fillRect(x + 1, yy + 1, w - 2, RP.rowH - 2); }
+    const main = `${v.sys}/${v.dia}${v.pulse ? ' · ' + v.pulse : ''}`;
+    g.font = font(600, 28, RF.num); const mw = g.measureText(main).width;
+    const extra = [v.n > 1 ? '×' + v.n : '', v.irr ? t('ihb') : ''].filter(Boolean).join(' ');
+    g.font = font(600, 18); const ew = extra ? g.measureText(extra).width + 10 : 0;
+    const sx = x + w / 2 - (mw + ew) / 2;
+    text(main, sx, yy + 37, font(600, 28, RF.num));
+    if (extra) text(extra, sx + mw + 10, yy + 35, font(600, 18), v.irr ? '#b3261e' : RC.muted);
+  };
+
+  newPage(); tableHead();
+  D.rows.forEach((r, i) => {
+    if (y + RP.rowH > footerY - 20) { newPage(); tableHead(); }
+    if (i % 2) { g.fillStyle = RC.alt; g.fillRect(M, y, inner, RP.rowH); }
+    text(fmtDate(r.d, false), colX[0] + colW[0] / 2, y + 37, font(700, 27, RF.num), RC.ink, 'center');
+    cell(r.m, colX[1], colW[1], y); cell(r.e, colX[2], colW[2], y);
+    g.strokeStyle = RC.line; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(M, y + RP.rowH); g.lineTo(M + inner, y + RP.rowH); g.moveTo(colX[1], y); g.lineTo(colX[1], y + RP.rowH); g.moveTo(colX[2], y); g.lineTo(colX[2], y + RP.rowH); g.stroke();
+    y += RP.rowH;
+  });
+  y += 18;
+  // legend
+  if (y + 40 > footerY) newPage();
+  g.fillStyle = RC.high; g.fillRect(M, y, 26, 26); g.strokeStyle = RC.line; g.lineWidth = 1; g.strokeRect(M, y, 26, 26);
+  text(t('rpHighLegend'), M + 38, y + 21, font(500, 21), RC.muted);
+  y += 46;
+  // method + notes box
+  const lines = [];
+  const wrap = (s, f, maxW) => { g.font = f; const words = s.split(' '); let cur = ''; const out = [];
+    for (const w of words) { const tryS = cur ? cur + ' ' + w : w; if (g.measureText(tryS).width > maxW && cur) { out.push(cur); cur = w; } else cur = tryS; }
+    if (cur) out.push(cur); return out; };
+  const nf = font(500, 22);
+  wrap(t('rpMethod'), nf, inner - 48).forEach(l => lines.push([l, RC.muted]));
+  if (D.notes.length) { lines.push(['', null]); lines.push([t('thNotes'), 'title']); D.notes.forEach(n => wrap(n, nf, inner - 48).forEach(l => lines.push([l, RC.ink]))); }
+  let li = 0;
+  while (li < lines.length) {
+    const room = Math.floor((footerY - 20 - y - 36) / 32);
+    if (room < 2) { newPage(); continue; }
+    const chunk = lines.slice(li, li + room); li += chunk.length;
+    const h = chunk.length * 32 + 34;
+    rrect(M, y, inner, h, 16, RC.noteBg, RC.noteLine);
+    chunk.forEach(([s, c], k) => { if (c === 'title') text(s, M + 24, y + 42 + k * 32, font(700, 23), RC.ink); else if (s) text(s, M + 24, y + 42 + k * 32, nf, c); });
+    y += h + 16;
+  }
+  // footers
+  pages.forEach((c, i) => {
+    g = c.getContext('2d');
+    text(t('rpGenerated', fmtDate(new Date())), M, RP.H - 40, font(500, 20), RC.muted);
+    text(t('rpPage', i + 1, pages.length), W - M, RP.H - 40, font(500, 20), RC.muted, 'right');
+  });
+  return pages;
+}
+
+// Minimal PDF writer: one full-page JPEG per A4 page.
+async function pagesToPdf(pages) {
+  const enc = new TextEncoder(), parts = [], offs = [];
+  let size = 0;
+  const add = x => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); size += b.length; };
+  const jpgs = await Promise.all(pages.map(c => new Promise(res => c.toBlob(b => res(b.arrayBuffer()), 'image/jpeg', 0.9)))).then(a => Promise.all(a)).then(a => a.map(b => new Uint8Array(b)));
+  const n = pages.length, total = 3 + 3 * n, PW = 595.28, PH = 841.89;
+  add('%PDF-1.4\n%âãÏÓ\n');
+  const obj = (id, body) => { offs[id] = size; add(`${id} 0 obj\n`); body(); add('\nendobj\n'); };
+  obj(1, () => add('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => add(`<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + 3 * i} 0 R`).join(' ')}] /Count ${n} >>`));
+  pages.forEach((c, i) => {
+    const pid = 3 + 3 * i, cid = pid + 1, iid = pid + 2;
+    obj(pid, () => add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im${i} ${iid} 0 R >> >> /Contents ${cid} 0 R >>`));
+    const cs = `q ${PW} 0 0 ${PH} 0 0 cm /Im${i} Do Q`;
+    obj(cid, () => add(`<< /Length ${enc.encode(cs).length} >>\nstream\n${cs}\nendstream`));
+    obj(iid, () => { add(`<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpgs[i].length} >>\nstream\n`); add(jpgs[i]); add('\nendstream'); });
+  });
+  const xref = size;
+  add(`xref\n0 ${total}\n0000000000 65535 f \n` + offs.slice(1).map(o => String(o).padStart(10, '0') + ' 00000 n \n').join(''));
+  add(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+
+async function buildReport() {
+  const D = reportData(reportDays);
+  const box = $('#report-pages');
+  reportFiles = null; $('#report-pdf').disabled = $('#report-png').disabled = true;
+  if (!D) { box.innerHTML = `<p class="muted">${t('noPeriod')}</p>`; return; }
+  box.innerHTML = `<p class="muted">${t('preparing')}</p>`;
+  try { await Promise.all([document.fonts.load(`700 30px ${RF.num}`), document.fonts.load(`600 30px ${RF.num}`), document.fonts.load(`500 22px ${RF.ui}`), document.fonts.load(`700 22px ${RF.ui}`)]); } catch (e) {}
+  const pages = drawReport(D);
+  box.innerHTML = '';
+  pages.forEach((c, i) => { const im = document.createElement('img'); im.src = c.toDataURL('image/png'); im.alt = t('rpPage', i + 1, pages.length); im.className = 'report-page'; box.appendChild(im); });
+  const base = `bp-report-${dayKey(D.first)}_${dayKey(D.last)}`;
+  const pdf = await pagesToPdf(pages);
+  const pngs = await Promise.all(pages.map(c => new Promise(res => c.toBlob(res, 'image/png'))));
+  reportFiles = { pdf: new File([pdf], base + '.pdf', { type: 'application/pdf' }),
+    pngs: pngs.map((b, i) => new File([b], base + (pages.length > 1 ? `-${i + 1}` : '') + '.png', { type: 'image/png' })) };
+  $('#report-pdf').disabled = $('#report-png').disabled = false;
+}
+
+function openReport() {
+  reportDays = trendDays === 7 ? 14 : (trendDays || 0);
+  if (![14, 30, 90, 0].includes(reportDays)) reportDays = 30;
+  renderReportRange();
+  $('#report-overlay').hidden = false;
+  buildReport();
+}
+function renderReportRange() {
+  $('#report-range').innerHTML = [[14, t('d14')], [30, t('d30')], [90, t('d90')], [0, t('all')]]
+    .map(([d, l]) => `<button class="chip" type="button" data-days="${d}" aria-pressed="${reportDays === d}">${l}</button>`).join('');
+}
+$('#report-range').addEventListener('click', e => { const b = e.target.closest('[data-days]'); if (!b) return; reportDays = +b.dataset.days; renderReportRange(); buildReport(); });
 $('#report-close').addEventListener('click', () => { $('#report-overlay').hidden = true; });
-$('#report-print').addEventListener('click', () => window.print());
+$('#report-pdf').addEventListener('click', () => { if (reportFiles) shareFiles([reportFiles.pdf]); });
+$('#report-png').addEventListener('click', () => { if (reportFiles) shareFiles(reportFiles.pngs); });
+
+// Share sheet on phones (Save to Files, Mail, AirDrop, Print...), download elsewhere.
+async function shareFiles(files) {
+  try {
+    if (navigator.canShare && navigator.canShare({ files }) && /iPhone|iPad|Android/i.test(navigator.userAgent)) { await navigator.share({ files }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  for (const f of files) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  }
+}
 
 /* ---------- Add / edit sheet ---------- */
 let editing = null;
@@ -1254,7 +1472,7 @@ window.addEventListener('resize', () => { if (current === 'trends') { const list
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
 // Exposed for tests and future modules
-window.BPD = { parseCSV, buildImport, parseDateTime, category, STR, get state() { return state; } };
+window.BPD = { parseCSV, buildImport, parseDateTime, category, STR, get reportFiles() { return reportFiles; }, get state() { return state; } };
 
 if ('serviceWorker' in navigator && !inFrame && /^https:|^http:\/\/localhost/.test(location.href)) {
   // Auto-update: check for a new version whenever the app comes back to the screen,
