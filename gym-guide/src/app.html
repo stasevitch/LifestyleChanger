@@ -1,0 +1,575 @@
+<title>Gym Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap">
+<style>
+/* One phone-width column, sticky title bar, bottom tab bar. Machine drawings carry the page: grey frame, person in ink, the part you move in orange. */
+:root {
+  --bg: #f4f5f2;
+  --surface: #ffffff;
+  --surface-2: #ecefe9;
+  --ink: #18211c;
+  --muted: #5b675f;
+  --line: #dce1da;
+  --accent: #0f6b5c;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfeee9;
+  --hot: #d9582b;
+  --frame: #9aa59d;
+  --pad: #c9d1ca;
+  --person: #2b3a33;
+  --shadow: 0 1px 2px rgba(24,33,28,.06), 0 4px 16px rgba(24,33,28,.06);
+  --font-ui: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-head: "Sora", "Figtree", system-ui, -apple-system, sans-serif;
+  --r: 16px;
+  --tabbar: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111612; --surface: #19201b; --surface-2: #212a24; --ink: #e6ece7; --muted: #9aa69e; --line: #2a352e;
+    --accent: #5cc4ad; --accent-ink: #0b1a16; --accent-soft: #1b3530; --hot: #f2804f; --frame: #6d7a71; --pad: #3a463e; --person: #dbe4dd;
+    --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111612; --surface: #19201b; --surface-2: #212a24; --ink: #e6ece7; --muted: #9aa69e; --line: #2a352e;
+  --accent: #5cc4ad; --accent-ink: #0b1a16; --accent-soft: #1b3530; --hot: #f2804f; --frame: #6d7a71; --pad: #3a463e; --person: #dbe4dd;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 16px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid transparent; }
+.top.scrolled { border-bottom-color: var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 10px; padding-block: 12px 10px; min-height: 56px; }
+.top h1 { margin: 0; font-family: var(--font-head); font-size: 1.3rem; font-weight: 600; letter-spacing: -.01em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.back { border: 0; background: var(--surface-2); width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.back svg { width: 20px; height: 20px; }
+
+main.wrap { padding-block: 4px calc(var(--tabbar) + env(safe-area-inset-bottom, 0px) + 28px); }
+.view { display: grid; gap: 14px; }
+h2.sec { margin: 8px 0 0; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.card { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 16px; min-width: 0; }
+.muted { color: var(--muted); }
+.small { font-size: .88rem; }
+p { margin: 0; }
+
+/* Identify */
+.q h2 { margin: 0; font-family: var(--font-head); font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; }
+.q .step { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opt { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 14px; padding: 12px; min-height: 112px; box-shadow: var(--shadow); }
+.opt:active { transform: scale(.98); }
+.opt .ico { width: 44px; height: 44px; color: var(--accent); }
+.opt b { font-size: 1rem; line-height: 1.2; }
+.opt span { color: var(--muted); font-size: .82rem; line-height: 1.3; }
+.opt.wide { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; gap: 12px; }
+.opt.wide div { display: grid; gap: 2px; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.crumb { border: 0; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: .85rem; padding: 5px 11px; border-radius: 999px; }
+.link { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 4px 0; }
+.howto { background: var(--accent-soft); border-radius: 14px; padding: 14px; display: grid; gap: 6px; font-size: .9rem; }
+.howto b { font-size: .95rem; }
+.howto ol { margin: 0; padding-left: 20px; display: grid; gap: 2px; }
+
+/* Machine cards */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mc { display: flex; flex-direction: column; text-align: left; border: 0; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 8px 8px 12px; gap: 4px; min-width: 0; }
+.mc .art { background: var(--surface-2); border-radius: 10px; }
+.mc b { font-size: .95rem; line-height: 1.25; padding: 4px 4px 0; }
+.mc span { font-size: .8rem; color: var(--muted); line-height: 1.3; padding: 0 4px; }
+.art { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+
+/* Browse */
+.search { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 12px; box-shadow: var(--shadow); padding: 0 12px; }
+.search svg { width: 20px; height: 20px; color: var(--muted); flex: none; }
+.search input { border: 0; background: none; flex: 1; min-width: 0; padding: 12px 0; outline: none; font-size: 1rem; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; font-size: .88rem; font-weight: 600; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.empty { text-align: center; padding: 24px 8px; color: var(--muted); }
+
+/* Detail */
+.hero { padding: 0; overflow: hidden; }
+.hero .art { background: var(--surface-2); }
+.hero .body { padding: 14px 16px 16px; display: grid; gap: 8px; }
+.hero h2 { margin: 0; font-family: var(--font-head); font-size: 1.45rem; font-weight: 600; letter-spacing: -.015em; line-height: 1.2; }
+.aka { color: var(--muted); font-size: .9rem; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: .8rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.legend { display: flex; gap: 14px; font-size: .78rem; color: var(--muted); flex-wrap: wrap; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--hot); margin-right: 5px; vertical-align: -1px; }
+.sect { display: grid; gap: 8px; }
+.sect h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.sect h3 svg { width: 20px; height: 20px; color: var(--accent); flex: none; }
+.sect ol, .sect ul { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.sect.warn h3 svg { color: var(--hot); }
+.start { border-left: 4px solid var(--accent); }
+.note { font-size: .8rem; color: var(--muted); text-align: center; padding: 4px 12px; }
+
+/* Machine drawing */
+.art .l { fill: none; stroke: var(--frame); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.art .pad { fill: var(--pad); }
+.art .flr { stroke: var(--line); stroke-width: 3; stroke-linecap: round; }
+.art .bd { fill: none; stroke: var(--person); stroke-linecap: round; stroke-linejoin: round; stroke-width: 7; }
+.art .bd .t { stroke-width: 12; }
+.art .bd circle { fill: var(--person); stroke: none; }
+.art .mv { fill: none; stroke: var(--hot); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.art .mvf { fill: var(--hot); }
+.art .ar { fill: none; stroke: var(--hot); stroke-width: 2.5; stroke-dasharray: 5 4; stroke-linecap: round; marker-end: url(#arrowhead); }
+.art .dsh { fill: none; stroke: var(--frame); stroke-width: 2; stroke-dasharray: 4 4; }
+
+/* Tabs */
+.tabs { position: fixed; inset: auto 0 0; z-index: 25; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tabs .wrap { display: grid; grid-template-columns: 1fr 1fr; height: var(--tabbar); }
+.tab { border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .74rem; font-weight: 600; color: var(--muted); }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--accent); }
+</style>
+<!-- /head -->
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="arrowhead" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--hot)"/></marker>
+</defs></svg>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <button class="back" id="back" hidden aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1 id="title">Gym Guide</h1>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="view-identify" aria-label="Identify"></section>
+  <section class="view" id="view-browse" aria-label="Browse" hidden></section>
+  <section class="view" id="view-machine" aria-label="Machine" hidden></section>
+</main>
+
+<nav class="tabs" aria-label="Main">
+  <div class="wrap">
+    <button class="tab" data-view="identify" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/><path d="M9.2 9.3a2 2 0 1 1 2.6 2c-.6.3-.8.7-.8 1.2"/><path d="M11 14.6h.01"/></svg><span>What's this?</span></button>
+    <button class="tab" data-view="browse">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>All machines</span></button>
+  </div>
+</nav>
+
+<script>
+'use strict';
+// ---------- Drawing helpers (viewBox 0 0 200 150, person faces right unless the drawing is a front view) ----------
+const pts = a => a.reduce((s, v, i) => s + (i % 2 ? ',' + v : (i ? ' L' : 'M') + v), '');
+const L = (...a) => `<path class="l" d="${pts(a)}"/>`;          // frame
+const R = (x, y, w, h, rot) => `<rect class="pad" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"${rot ? ` transform="rotate(${rot} ${x + w / 2} ${y + h / 2})"` : ''}/>`;
+const Rp = (x, y, r) => `<circle class="pad" cx="${x}" cy="${y}" r="${r}"/>`;                   // roller pad
+const M = (...a) => `<path class="mv" d="${pts(a)}"/>`;          // the part you move
+const Mc = (x, y, r) => `<circle class="mvf" cx="${x}" cy="${y}" r="${r}"/>`;
+const A = d => `<path class="ar" d="${d}"/>`;                    // motion arrow
+const D = d => `<path class="dsh" d="${d}"/>`;                   // dashed guide (path of motion, cable)
+const FLOOR = '<path class="flr" d="M12 142H188"/>';
+// Person: head [x,y], torso [shoulder x,y, hip x,y], limbs [[x,y,...], ...]
+const B = (h, t, ...limbs) => `<g class="bd"><path class="t" d="${pts(t)}"/>${limbs.map(l => `<path d="${pts(l)}"/>`).join('')}<circle cx="${h[0]}" cy="${h[1]}" r="9"/></g>`;
+function art(m, label) {
+  return `<svg class="art" viewBox="0 0 200 150" role="img" aria-label="${esc(label || m.name)}">${FLOOR}${m.art}</svg>`;
+}
+
+// ---------- Machine catalog ----------
+// pos: how you are on it (sit, lie, stand, kneel, cardio). move: what you do (push, pull, squeeze, curl, legs, core).
+const START = 'Do 2–3 sets of 10–15 reps. Pick a weight where the last 2–3 reps feel hard but you can still keep good form. Rest 1–2 minutes between sets.';
+const CARDIO_START = 'Go for 10–20 minutes at an easy pace: you should still be able to talk. Add a few minutes each week.';
+const MACHINES = [
+{ id: 'chest-press', name: 'Chest press machine', aka: ['Seated chest press', 'Machine bench press'],
+  groups: ['chest', 'arms'], muscles: ['Chest', 'Front of shoulders', 'Triceps'], pos: ['sit'], move: ['push'],
+  spot: 'Seat with an upright back pad and two handles sticking out in front of you at chest height.',
+  art: L(40, 142, 40, 26, 62, 18, 118, 18) + L(80, 142, 80, 104) + R(56, 98, 42, 8) + R(48, 38, 9, 58)
+    + B([66, 34], [66, 50, 72, 96], [66, 52, 88, 60, 114, 56], [72, 96, 106, 98, 108, 134, 118, 136])
+    + M(118, 18, 118, 50) + M(112, 56, 120, 56) + A('M130 56H158'),
+  setup: ['Set the seat height so the handles line up with the middle of your chest.', 'Sit with your back against the pad and feet flat on the floor.', 'Pick a light weight: move the pin in the weight stack.'],
+  steps: ['Grip the handles with straight wrists.', 'Push forward until your arms are almost straight. Don\'t lock your elbows.', 'Let the handles come back slowly (2–3 seconds) until you feel a light stretch in your chest.', 'Breathe out as you push, breathe in as you come back.'],
+  avoid: ['Seat too high or low, so the handles are at your shoulders or belly. It strains the shoulders.', 'Arching your back off the pad to push more.', 'Letting the weights slam down between reps.'] },
+
+{ id: 'shoulder-press', name: 'Shoulder press machine', aka: ['Seated overhead press', 'Military press machine'],
+  groups: ['shoulders', 'arms'], muscles: ['Shoulders', 'Triceps'], pos: ['sit'], move: ['push'],
+  spot: 'Seat with an upright back pad and handles beside your shoulders that you push up over your head.',
+  art: L(40, 142, 40, 8, 54, 8) + L(80, 142, 80, 104) + R(56, 98, 42, 8) + R(48, 38, 9, 58)
+    + B([66, 34], [66, 50, 72, 96], [66, 52, 84, 40, 80, 14], [72, 96, 106, 98, 108, 134, 118, 136])
+    + M(54, 8, 80, 8, 80, 18) + A('M100 40V12'),
+  setup: ['Set the seat so the handles start at about shoulder height.', 'Sit with your back flat against the pad.'],
+  steps: ['Grip the handles, elbows under your hands.', 'Push straight up until your arms are almost straight.', 'Lower slowly back to shoulder level.', 'Breathe out as you push up.'],
+  avoid: ['Arching your lower back off the pad.', 'Locking your elbows hard at the top.', 'Seat so low that the handles start below your shoulders.'] },
+
+{ id: 'lat-pulldown', name: 'Lat pulldown', aka: ['Pulldown machine', 'Cable pulldown'],
+  groups: ['back', 'arms'], muscles: ['Upper back (lats)', 'Biceps', 'Back of shoulders'], pos: ['sit'], move: ['pull'],
+  spot: 'Seat with pads that hold your thighs down, and a long bar hanging from a cable above your head.',
+  art: L(156, 142, 156, 6, 100, 6) + L(80, 142, 80, 104) + R(62, 98, 40, 8) + L(130, 142, 130, 86, 118, 86)
+    + B([80, 38], [78, 52, 82, 96], [78, 54, 92, 36, 98, 16], [82, 96, 112, 96, 114, 134, 124, 136])
+    + R(100, 82, 24, 8) + M(100, 6, 100, 16) + M(84, 16, 114, 16) + A('M124 24V50'),
+  setup: ['Adjust the thigh pad so your legs fit snugly under it with feet flat.', 'Stand, grab the bar a bit wider than your shoulders, palms facing away, then sit down with it.'],
+  steps: ['Sit tall with your chest up and lean back just a little.', 'Pull the bar down to your upper chest, driving your elbows down and back.', 'Pause, then let the bar rise slowly until your arms are straight.'],
+  avoid: ['Pulling the bar behind your neck. It strains the shoulders.', 'Swinging your body back to move the weight.', 'Letting the bar yank your arms up quickly.'] },
+
+{ id: 'cable-row', name: 'Seated cable row', aka: ['Low row', 'Cable row'],
+  groups: ['back', 'arms'], muscles: ['Middle back', 'Upper back (lats)', 'Biceps'], pos: ['sit'], move: ['pull'],
+  spot: 'Long low bench with a foot platform at the end, and a cable coming out low from a weight stack.',
+  art: L(26, 142, 26, 118) + L(104, 142, 104, 118) + R(20, 114, 96, 8) + L(122, 98, 122, 128) + L(160, 142, 160, 30) + L(148, 112, 160, 112)
+    + B([62, 52], [62, 66, 62, 108], [62, 68, 50, 88, 74, 94], [62, 108, 92, 88, 114, 106, 116, 98])
+    + D('M76 94L148 112') + M(74, 88, 78, 100) + A('M108 80H84'),
+  setup: ['Clip a handle onto the cable if there isn\'t one (the V-shaped handle is the usual one).', 'Sit with your feet on the platform and knees slightly bent.'],
+  steps: ['Sit tall holding the handle with straight arms.', 'Pull the handle to your belly button, squeezing your shoulder blades together.', 'Let your arms go forward slowly until straight. Keep your lower back from rounding.'],
+  avoid: ['Rocking back and forth to move the weight.', 'Rounding your lower back.', 'Shrugging your shoulders up to your ears.'] },
+
+{ id: 'machine-row', name: 'Seated row machine', aka: ['Chest-supported row', 'Row machine (not the rowing machine for cardio)'],
+  groups: ['back', 'arms'], muscles: ['Middle back', 'Upper back (lats)', 'Biceps'], pos: ['sit'], move: ['pull'],
+  spot: 'Seat facing a chest pad, with handles out in front that you pull back toward you.',
+  art: L(80, 142, 80, 104) + R(58, 98, 40, 8) + L(110, 142, 110, 86) + R(100, 44, 9, 40) + L(150, 142, 150, 18)
+    + B([82, 36], [78, 50, 74, 96], [78, 52, 64, 70, 98, 64], [74, 96, 104, 98, 106, 134, 116, 136])
+    + M(150, 30, 120, 58, 100, 58, 100, 70) + A('M140 58H116'),
+  setup: ['Set the seat so the handles are at the middle of your chest.', 'Set the chest pad so you can just reach the handles with straight arms.'],
+  steps: ['Rest your chest on the pad and grab the handles.', 'Pull your elbows back past your body, squeezing your shoulder blades.', 'Return slowly until your arms are straight.'],
+  avoid: ['Lifting your chest off the pad to throw the weight.', 'Short pulls that stop in front of your body.'] },
+
+{ id: 'pec-deck', name: 'Pec deck (chest fly machine)', aka: ['Butterfly machine', 'Pec fly', 'Reverse fly / rear delt machine (same machine, sit facing the pad)'],
+  groups: ['chest', 'shoulders'], muscles: ['Chest', 'Front of shoulders'], pos: ['sit'], move: ['squeeze', 'pull'],
+  spot: 'Seat with a tall back pad and two arms that swing out to your sides at shoulder height, with handles or forearm pads.',
+  view: 'front',
+  art: R(88, 28, 24, 72) + L(100, 100, 100, 142) + L(100, 14, 60, 14, 60, 20) + L(100, 14, 140, 14, 140, 20)
+    + B([100, 30], [100, 46, 100, 94], [100, 48, 76, 50, 72, 24], [100, 48, 124, 50, 128, 24], [94, 94, 86, 118, 86, 138], [106, 94, 114, 118, 114, 138])
+    + `<rect class="mvf" x="62" y="20" width="7" height="36" rx="3"/><rect class="mvf" x="131" y="20" width="7" height="36" rx="3"/>`
+    + A('M44 66H64') + A('M156 66H136'),
+  setup: ['Set the seat so the handles are at chest height.', 'Set the start position of the arms (usually a lever at the top) so you feel only a light stretch at the start.'],
+  steps: ['Sit with your back against the pad, elbows slightly bent and kept that way.', 'Bring the handles together in front of your chest, like hugging a big tree.', 'Squeeze, then open slowly until your arms are in line with your body, not further back.'],
+  also: ['Reverse fly: sit facing the pad, move the arms to the back position, and push the handles apart. Works the back of your shoulders and upper back.'],
+  avoid: ['Letting your arms go far behind your body. It strains the shoulders.', 'Bending and straightening your elbows, which turns it into a press.'] },
+
+{ id: 'hip-machine', name: 'Hip abductor / adductor machine', aka: ['Outer thigh / inner thigh machine', 'Hip abduction', 'Hip adduction'],
+  groups: ['legs', 'glutes'], muscles: ['Outer hips and glutes (pads outside)', 'Inner thighs (pads inside)'], pos: ['sit'], move: ['legs'],
+  spot: 'Seat with pads against your knees, either outside or inside them. You push your legs apart or squeeze them together.',
+  view: 'front',
+  art: R(86, 40, 28, 62) + L(100, 104, 100, 142) + L(60, 140, 60, 100) + L(140, 140, 140, 100)
+    + B([100, 40], [100, 56, 100, 98], [100, 60, 86, 82, 84, 100], [100, 60, 114, 82, 116, 100], [94, 98, 76, 112, 74, 138], [106, 98, 124, 112, 126, 138])
+    + `<rect class="mvf" x="62" y="98" width="7" height="26" rx="3"/><rect class="mvf" x="131" y="98" width="7" height="26" rx="3"/>`
+    + A('M58 92H38') + A('M142 92H162'),
+  setup: ['Set the start position with the lever (often at the side). Start with a small range.', 'Outer thighs: pads on the outside of your knees. Inner thighs: pads on the inside. Some machines flip the pads, some gyms have two separate machines.'],
+  steps: ['Sit back and hold the handles.', 'Push your legs apart (outer) or squeeze them together (inner) smoothly.', 'Return slowly, without letting the weights touch down.'],
+  avoid: ['Letting the weight snap your legs back.', 'Starting with a very wide range.'] },
+
+{ id: 'leg-press', name: 'Leg press', aka: ['Seated leg press', '45° leg press (the sled version you lie under)'],
+  groups: ['legs', 'glutes'], muscles: ['Front of thighs (quads)', 'Glutes', 'Back of thighs (hamstrings)'], pos: ['sit', 'lie'], move: ['legs'],
+  spot: 'Reclined seat with a big flat platform in front of your feet that you push away.',
+  art: L(36, 142, 36, 112, 84, 112, 84, 142) + R(30, 104, 56, 8) + R(34, 42, 9, 64, -22) + L(170, 142, 170, 60, 140, 60)
+    + B([42, 44], [48, 58, 64, 102], [48, 60, 60, 82, 72, 100], [64, 102, 94, 74, 112, 100])
+    + `<path class="mvf" d="M116 66L124 64L130 118L122 120Z"/>` + M(126, 92, 140, 92, 140, 60) + A('M140 108H164'),
+  setup: ['Adjust the back rest so your knees are bent to about a right angle at the start.', 'Feet hip-width apart in the middle of the platform.', 'On the 45° sled version: push up, then turn the safety handles out. Turn them back in when you finish.'],
+  steps: ['Push the platform away through your whole foot until your legs are almost straight. Don\'t lock your knees.', 'Bend your knees slowly back to about a right angle. Keep your lower back on the pad.'],
+  avoid: ['Locking your knees at the top.', 'Going so deep that your hips roll up off the seat.', 'Pushing through your toes only.'] },
+
+{ id: 'leg-extension', name: 'Leg extension', aka: ['Quad extension', 'Knee extension'],
+  groups: ['legs'], muscles: ['Front of thighs (quads)'], pos: ['sit'], move: ['legs'],
+  spot: 'Seat with a padded roller in front of your lower shins. You kick your legs up straight.',
+  art: L(80, 142, 80, 104) + R(56, 96, 48, 8) + R(48, 40, 9, 56) + L(106, 142, 106, 102)
+    + B([64, 34], [66, 50, 72, 94], [66, 52, 74, 76, 86, 92], [72, 94, 106, 96, 116, 130, 126, 134])
+    + M(106, 100, 120, 124) + Mc(122, 126, 7) + A('M138 132Q152 112 146 92'),
+  setup: ['Move the back pad so your knees line up with the machine\'s pivot (often marked with a coloured dot).', 'The roller sits on your lower shins, just above your ankles.'],
+  steps: ['Hold the side handles and straighten your legs until they\'re almost straight.', 'Pause for a moment, then lower slowly.'],
+  avoid: ['Kicking fast and letting the weight drop.', 'Lifting your hips off the seat.'] },
+
+{ id: 'seated-leg-curl', name: 'Seated leg curl', aka: ['Hamstring curl (seated)'],
+  groups: ['legs'], muscles: ['Back of thighs (hamstrings)'], pos: ['sit'], move: ['legs'],
+  spot: 'Seat where your legs rest straight out on a roller, with a pad clamping your thighs from above. You bend your knees down.',
+  art: L(80, 142, 80, 106) + R(54, 98, 50, 8) + R(46, 40, 9, 58) + L(106, 142, 106, 104)
+    + B([62, 34], [64, 50, 70, 94], [64, 52, 74, 76, 86, 90], [70, 94, 106, 94, 140, 92, 148, 84])
+    + R(84, 80, 26, 8) + M(106, 100, 140, 100) + Mc(142, 100, 7) + A('M156 106Q154 126 136 134'),
+  setup: ['Move the back pad so your knees line up with the pivot.', 'The lower roller goes just above your heels, the thigh pad snug on top, just above your knees.'],
+  steps: ['Pull your heels down and back under the seat as far as is comfortable.', 'Let your legs return slowly until they\'re almost straight.'],
+  avoid: ['A loose thigh pad, so your hips lift.', 'Letting the weight jerk your legs back up.'] },
+
+{ id: 'lying-leg-curl', name: 'Lying leg curl', aka: ['Prone leg curl', 'Hamstring curl (lying)'],
+  groups: ['legs'], muscles: ['Back of thighs (hamstrings)'], pos: ['lie'], move: ['legs'],
+  spot: 'Bench you lie on face down, with a padded roller behind your ankles.',
+  art: L(40, 142, 40, 106) + L(120, 142, 120, 106) + R(24, 98, 112, 8) + L(140, 142, 140, 104)
+    + B([30, 84], [44, 92, 94, 90], [44, 94, 38, 106, 26, 106], [94, 90, 126, 92, 158, 90])
+    + M(140, 100, 160, 84) + Mc(160, 82, 7) + A('M172 80Q168 54 146 46'),
+  setup: ['Lie face down with your knees just past the end of the bench, in line with the pivot.', 'The roller sits just above your heels.'],
+  steps: ['Hold the handles and curl your heels toward your bottom.', 'Lower slowly.'],
+  avoid: ['Lifting your hips off the bench.', 'Arching your lower back.'] },
+
+{ id: 'calf-raise', name: 'Standing calf raise', aka: ['Calf machine', 'Seated calf raise (similar, with a knee pad)'],
+  groups: ['legs'], muscles: ['Calves'], pos: ['stand'], move: ['legs'],
+  spot: 'You stand under padded shoulder rests with the balls of your feet on a small step.',
+  art: L(140, 142, 140, 20, 112, 20) + `<rect class="pad" x="90" y="134" width="22" height="8" rx="2"/>`
+    + B([90, 26], [92, 42, 92, 88], [92, 44, 100, 60, 104, 40], [92, 88, 94, 112, 92, 132, 104, 136])
+    + `<rect class="mvf" x="82" y="34" width="26" height="8" rx="3"/>` + M(108, 38, 112, 20) + A('M124 128V100'),
+  setup: ['Set the shoulder pads so you stand straight with your knees soft.', 'Balls of your feet on the edge of the step, heels hanging off.'],
+  steps: ['Rise up onto your toes as high as you can.', 'Pause, then lower your heels below the step for a stretch.'],
+  also: ['Seated calf raise: a similar machine where a pad sits on your knees. Works the lower part of the calf.'],
+  avoid: ['Bouncing at the bottom.', 'Bending your knees to help.'] },
+
+{ id: 'smith-machine', name: 'Smith machine', aka: ['Guided barbell', 'Smith rack'],
+  groups: ['legs', 'chest', 'shoulders', 'back'], muscles: ['Depends on the exercise: legs, chest, shoulders or back'], pos: ['stand', 'lie', 'sit'], move: ['push', 'legs', 'pull'],
+  spot: 'Barbell fixed inside two vertical rails so it only slides straight up and down, with hooks that lock into slots on the frame.',
+  art: L(66, 142, 66, 8, 134, 8, 134, 142) + `<path class="dsh" d="M82 10V140"/>` + L(132, 120, 120, 120)
+    + B([96, 32], [94, 46, 94, 90], [94, 48, 78, 58, 80, 44], [94, 90, 98, 114, 94, 136, 106, 138])
+    + Mc(84, 44, 6) + `<path class="mv" d="M78 44H66"/>` + A('M116 70V40'),
+  setup: ['Learn the lock first: turn the bar with your hands to unhook it, turn it back to hook it into a slot.', 'Set the safety stoppers just below the lowest point of your exercise.', 'The bar alone weighs something (often 5–25 kg). Check the sticker or ask staff.'],
+  steps: ['Squat: bar on your upper back (not your neck), feet a little in front of the bar, shoulder-width apart.', 'Unhook, then sit your hips back and down until your thighs are about level with the floor.', 'Stand back up and hook the bar.'],
+  also: ['Bench press with a flat bench under the bar.', 'Shoulder press sitting on an upright bench.', 'Inverted row: bar low, lie under it and pull your chest up.'],
+  avoid: ['Forgetting to set the safety stoppers.', 'Feet directly under the bar, which strains knees and back.'] },
+
+{ id: 'cable-machine', name: 'Cable machine (functional trainer)', aka: ['Cable crossover', 'Cable tower', 'Dual pulley'],
+  groups: ['chest', 'back', 'shoulders', 'arms', 'core'], muscles: ['Almost anything, depending on the handle and pulley height'], pos: ['stand'], move: ['pull', 'push', 'squeeze', 'curl'],
+  spot: 'One or two tall towers with pulleys that slide up and down, and handles on cables.',
+  view: 'front',
+  art: R(16, 8, 16, 134) + R(168, 8, 16, 134) + D('M34 22L94 82') + D('M166 22L106 82') + Mc(34, 22, 5) + Mc(166, 22, 5)
+    + B([100, 30], [100, 46, 100, 90], [100, 48, 82, 64, 94, 82], [100, 48, 118, 64, 106, 82], [96, 90, 92, 138], [104, 90, 108, 138])
+    + A('M52 54L74 74') + A('M148 54L126 74'),
+  setup: ['Pull the pin on the pulley and slide it to the height you need.', 'Clip on the handle you need: single handle, rope or straight bar.', 'The number on the stack often isn\'t the weight you feel, because the pulleys make it lighter. Judge by feel.'],
+  steps: ['Cable fly: pulleys high, one handle in each hand, step forward.', 'With a slight bend in your elbows, bring your hands together in front of you in an arc.', 'Return slowly.'],
+  also: ['Triceps pushdown: rope or bar, pulley high.', 'Biceps curl: bar, pulley low.', 'Face pull: rope, pulley at face height.', 'Single-arm row: one handle, pulley at chest height.'],
+  avoid: ['Standing so close that the weights touch down between reps.', 'Swinging your body instead of using your muscles.'] },
+
+{ id: 'assisted-pullup', name: 'Assisted pull-up / dip machine', aka: ['Assisted chin-up', 'Gravitron'],
+  groups: ['back', 'arms', 'chest'], muscles: ['Upper back (lats)', 'Biceps', 'Triceps and chest (dips)'], pos: ['kneel'], move: ['pull', 'push'],
+  spot: 'Tall machine with handles at the top, dip handles in the middle, and a knee pad or step that lifts you up.',
+  art: L(150, 142, 150, 16, 104, 16, 104, 26) + L(150, 76, 124, 76)
+    + B([96, 26], [96, 40, 96, 80], [96, 42, 84, 58, 102, 28], [96, 80, 96, 110, 74, 112, 66, 118])
+    + `<rect class="mvf" x="82" y="112" width="30" height="8" rx="3"/>` + M(110, 116, 138, 134) + A('M120 108V80'),
+  setup: ['Choose the help weight. More weight = more help = easier. Start high and lower it over the weeks.', 'Climb the steps, grab the top handles, then put your knees on the pad one at a time.'],
+  steps: ['Pull up until your chin is above the handles, elbows down to your sides.', 'Lower slowly until your arms are straight.', 'Dips: hold the middle handles, lower until your elbows are at about a right angle, then press back up.'],
+  avoid: ['Stepping off the pad suddenly: it shoots up. Hold the handles and step off carefully.', 'Swinging your body.'] },
+
+{ id: 'hack-squat', name: 'Hack squat', aka: ['Hack squat machine', 'Sled squat'],
+  groups: ['legs', 'glutes'], muscles: ['Front of thighs (quads)', 'Glutes'], pos: ['stand'], move: ['legs'],
+  spot: 'Angled sled with shoulder pads and a back pad. You stand on a slanted platform with your back against the pad.',
+  art: L(30, 8, 90, 142) + R(52, 28, 10, 74, -24)
+    + B([64, 22], [68, 36, 84, 86], [68, 38, 80, 56, 76, 36], [84, 86, 116, 98, 110, 128, 120, 130])
+    + `<rect class="mvf" x="62" y="30" width="18" height="8" rx="3"/>` + `<path class="pad" d="M96 132L134 124L136 132L98 140Z"/>` + A('M36 76L24 46'),
+  setup: ['Shoulders under the pads, back flat against the pad, feet shoulder-width apart in the middle of the platform.', 'Push up to stand, then release the safety handles.'],
+  steps: ['Bend your knees and lower until your thighs are about level with the platform.', 'Push through your whole foot to stand back up, without locking your knees.', 'Put the safety handles back on when you finish.'],
+  avoid: ['Heels lifting off the platform.', 'Knees caving inward.'] },
+
+{ id: 'back-extension', name: 'Back extension bench', aka: ['Hyperextension', 'Roman chair (45°)'],
+  groups: ['back', 'glutes', 'core'], muscles: ['Lower back', 'Glutes', 'Back of thighs (hamstrings)'], pos: ['lie'], move: ['core'],
+  spot: 'Angled bench with a pad for your hips and a roller to hook your ankles under.',
+  art: L(30, 140, 150, 140) + L(40, 140, 40, 120) + L(40, 128, 96, 100) + L(96, 140, 96, 100) + R(86, 88, 26, 10, -33) + Rp(42, 114, 6)
+    + B([136, 60], [124, 68, 90, 90], [124, 70, 118, 84, 130, 80], [90, 90, 66, 104, 46, 118, 40, 128])
+    + D('M136 60Q150 96 128 122') + A('M160 112Q166 86 148 64'),
+  setup: ['Set the hip pad so its top edge sits just below your hip bones, so you can bend freely.', 'Hook your ankles under the roller.'],
+  steps: ['Cross your arms over your chest. Lower your upper body by bending at the hips.', 'Rise until your body is in a straight line, not past it.'],
+  avoid: ['Arching backward at the top.', 'Jerking up fast.'] },
+
+{ id: 'biceps-curl', name: 'Biceps curl machine', aka: ['Preacher curl machine', 'Arm curl machine'],
+  groups: ['arms'], muscles: ['Biceps'], pos: ['sit'], move: ['curl'],
+  spot: 'Seat with a slanted arm pad in front. You rest your upper arms on it and curl the handles up.',
+  art: L(70, 142, 70, 104) + R(48, 98, 42, 8) + L(120, 142, 120, 86) + R(80, 62, 36, 9, 30)
+    + B([70, 38], [68, 52, 66, 96], [68, 54, 104, 72, 94, 44], [66, 96, 98, 98, 100, 134, 110, 136])
+    + M(108, 78, 94, 44) + Mc(94, 42, 5) + A('M124 66Q122 40 104 30'),
+  setup: ['Set the seat so your armpits rest snugly at the top of the pad and your elbows line up with the pivot.'],
+  steps: ['Curl the handles toward your shoulders.', 'Lower slowly until your arms are almost straight.'],
+  avoid: ['Lifting your elbows off the pad.', 'Dropping the weight at the bottom. It\'s hard on the elbows.'] },
+
+{ id: 'triceps-press', name: 'Seated dip / triceps press', aka: ['Triceps dip machine', 'Triceps press machine'],
+  groups: ['arms', 'chest'], muscles: ['Triceps', 'Chest'], pos: ['sit'], move: ['push'],
+  spot: 'Seat with handles at your sides, around waist height, that you push down.',
+  art: L(80, 142, 80, 104) + R(56, 98, 42, 8) + R(48, 38, 9, 58) + L(40, 142, 40, 20, 86, 20, 86, 60)
+    + B([66, 34], [66, 50, 72, 96], [66, 52, 70, 74, 82, 94], [72, 96, 106, 98, 108, 134, 118, 136])
+    + M(86, 60, 86, 94) + Mc(84, 94, 5) + A('M100 68V96'),
+  setup: ['Set the seat so the handles are at about chest height at the start.'],
+  steps: ['Grab the handles with your elbows close to your body.', 'Push down until your arms are straight.', 'Let the handles rise slowly until your elbows are at about a right angle.'],
+  avoid: ['Elbows flaring out to the sides.', 'Shrugging your shoulders up.'] },
+
+{ id: 'ab-crunch', name: 'Ab crunch machine', aka: ['Abdominal crunch machine'],
+  groups: ['core'], muscles: ['Abs'], pos: ['sit'], move: ['core'],
+  spot: 'Seat with pads or handles over your shoulders and chest. You curl forward against them.',
+  art: L(70, 142, 70, 104) + R(46, 98, 44, 8) + R(40, 34, 9, 62) + L(30, 142, 30, 18, 70, 18)
+    + B([94, 44], [82, 58, 64, 96], [82, 60, 82, 44, 92, 36], [64, 96, 98, 98, 102, 132, 112, 136])
+    + M(70, 18, 86, 30) + Mc(90, 34, 6) + Rp(110, 128, 6) + A('M106 24Q126 30 128 54'),
+  setup: ['Set the seat so the pads rest on your upper chest or the handles sit by your shoulders.', 'Hook your feet under the rollers if there are any.'],
+  steps: ['Breathe out and curl your ribs toward your hips, rounding your upper back.', 'Return slowly.'],
+  avoid: ['Pulling with your arms.', 'Using so much weight that you move from your hips instead of your abs.'] },
+
+// ---- Cardio ----
+{ id: 'treadmill', name: 'Treadmill', aka: ['Running machine'], cardio: true,
+  groups: ['cardio'], muscles: ['Heart and lungs', 'Legs'], pos: ['cardio'], move: [],
+  spot: 'Moving belt you walk or run on, with a screen and handrails at the front.',
+  art: `<path class="pad" d="M24 126H156L160 136H20Z"/>` + L(156, 132, 150, 50) + L(150, 58, 112, 66) + R(134, 40, 30, 12)
+    + B([84, 26], [84, 40, 84, 86], [84, 42, 92, 62, 104, 70], [84, 42, 78, 62, 70, 76], [84, 86, 98, 106, 102, 124, 112, 126], [84, 86, 78, 108, 66, 120, 70, 126])
+    + A('M140 120H40'),
+  setup: ['Clip the safety key to your clothes. It stops the belt if you fall back.', 'Stand on the side rails, start the belt at a slow speed, then step on.'],
+  steps: ['Walk tall and look ahead, not at your feet.', 'Raise the speed or incline a little at a time.', 'Slow down to stop before stepping off.'],
+  avoid: ['Holding the rails tightly, especially on an incline.', 'Stepping off while the belt is still moving fast.'], start: CARDIO_START },
+
+{ id: 'elliptical', name: 'Elliptical (cross trainer)', aka: ['Cross trainer', 'Elliptical trainer'], cardio: true,
+  groups: ['cardio'], muscles: ['Heart and lungs', 'Legs', 'Arms'], pos: ['cardio'], move: [],
+  spot: 'Two foot pedals that move in an oval, usually with handlebars that swing back and forth.',
+  art: L(24, 142, 170, 142) + `<ellipse class="dsh" cx="92" cy="120" rx="30" ry="9"/>` + L(150, 142, 150, 44) + R(140, 34, 22, 10)
+    + B([82, 22], [84, 36, 86, 80], [84, 38, 100, 56, 118, 48], [86, 80, 102, 98, 106, 118, 116, 120], [86, 80, 78, 102, 72, 122, 82, 124])
+    + M(118, 40, 108, 120) + A('M58 108Q62 96 80 96'),
+  setup: ['Step onto the pedals while holding the fixed handles, then start pedalling.'],
+  steps: ['Keep your whole foot on the pedal and stand tall.', 'Push and pull the moving handles to use your arms too.', 'Raise the resistance a little when it starts to feel easy.'],
+  avoid: ['Leaning heavily on the handles.', 'Going on your tiptoes.'], start: CARDIO_START },
+
+{ id: 'rowing-machine', name: 'Rowing machine', aka: ['Rower', 'Ergometer', 'Erg'], cardio: true,
+  groups: ['cardio', 'back', 'legs'], muscles: ['Heart and lungs', 'Legs', 'Back', 'Arms'], pos: ['cardio'], move: [],
+  spot: 'Long low rail with a sliding seat, foot plates with straps, and a handle on a chain or strap going into a fan or flywheel.',
+  art: L(20, 134, 170, 134) + L(30, 142, 30, 134) + `<circle class="pad" cx="164" cy="114" r="16"/>` + R(140, 104, 8, 26, -20) + R(50, 120, 26, 7)
+    + B([50, 58], [54, 72, 64, 116], [54, 74, 46, 96, 74, 94], [64, 116, 104, 110, 140, 118])
+    + D('M78 94L154 108') + A('M116 86H88'),
+  setup: ['Strap your feet in so the strap goes over the widest part of your foot.', 'Set the damper (the lever on the fan) to about 3–5. Higher isn\'t better for beginners.'],
+  steps: ['The pull: legs push first, then lean back a little, then pull the handle to your lower ribs.', 'The return: arms go forward first, then lean forward, then bend your knees.', 'Think "legs, body, arms", then "arms, body, legs".'],
+  avoid: ['Pulling with your arms first.', 'Rounding your back.'], start: CARDIO_START },
+
+{ id: 'stair-climber', name: 'Stair climber', aka: ['Stepmill', 'Stair machine', 'StairMaster'], cardio: true,
+  groups: ['cardio', 'legs', 'glutes'], muscles: ['Heart and lungs', 'Legs', 'Glutes'], pos: ['cardio'], move: [],
+  spot: 'Moving staircase that keeps turning under your feet, with handrails at the sides.',
+  art: `<path class="pad" d="M40 142V128H70V114H100V100H130V142Z"/>` + L(136, 142, 136, 58, 106, 58)
+    + B([80, 22], [82, 36, 82, 80], [82, 38, 94, 54, 110, 58], [82, 80, 98, 92, 92, 112, 104, 114], [82, 80, 76, 104, 66, 126, 76, 128])
+    + A('M150 126V88'),
+  setup: ['Hold the rails, step on and press start at the slowest speed.'],
+  steps: ['Stand tall and step with your whole foot on each stair.', 'Use the rails lightly for balance only.'],
+  avoid: ['Leaning on the rails with your weight, which makes it much easier and strains your back.', 'Looking down at your feet.'], start: CARDIO_START },
+];
+const byId = Object.fromEntries(MACHINES.map(m => [m.id, m]));
+
+const GROUPS = [['all', 'All'], ['chest', 'Chest'], ['back', 'Back'], ['shoulders', 'Shoulders'], ['arms', 'Arms'], ['legs', 'Legs'], ['glutes', 'Glutes'], ['core', 'Core'], ['cardio', 'Cardio']];
+
+// ---------- Identify questions ----------
+const ICON = (d) => `<svg class="ico" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const Q_POS = [
+  { v: 'sit', b: 'Sitting', s: 'There\'s a seat', i: ICON('<circle cx="20" cy="9" r="4" fill="currentColor" stroke="none"/><path d="M20 16v14h12v12M12 14v18h10M20 22h10"/>') },
+  { v: 'lie', b: 'Lying down', s: 'On your back, front or at an angle', i: ICON('<circle cx="9" cy="24" r="4" fill="currentColor" stroke="none"/><path d="M16 26h22M6 33h36M14 33v8M36 33v8"/>') },
+  { v: 'stand', b: 'Standing', s: 'Feet on the floor or a platform', i: ICON('<circle cx="24" cy="8" r="4" fill="currentColor" stroke="none"/><path d="M24 15v15M24 30l-5 12M24 30l5 12M16 22h16"/>') },
+  { v: 'kneel', b: 'Kneeling', s: 'Knees on a pad, hands up high', i: ICON('<circle cx="22" cy="10" r="4" fill="currentColor" stroke="none"/><path d="M22 17v13l-12 0M22 19l10-6v-9M6 38h28M10 30v8"/>') },
+  { v: 'cardio', b: 'It\'s a cardio machine', s: 'You keep moving for minutes: walking, stepping, rowing', wide: true, i: ICON('<path d="M24 40S8 30 8 18a8 8 0 0 1 16-3 8 8 0 0 1 16 3c0 12-16 22-16 22z"/><path d="M12 24h7l3-5 4 9 3-4h7"/>') },
+];
+const Q_MOVE = [
+  { v: 'push', b: 'Arms push away', s: 'Forward, up, or down', i: ICON('<path d="M8 24h24M24 14l10 10-10 10"/><path d="M40 12v24"/>') },
+  { v: 'pull', b: 'Arms pull toward you', s: 'A bar or handles come to you', i: ICON('<path d="M40 24H16M24 14L14 24l10 10"/><path d="M8 12v24"/>') },
+  { v: 'squeeze', b: 'Arms squeeze together', s: 'Like hugging, handles out to the sides', i: ICON('<path d="M4 24h12M10 18l6 6-6 6M44 24H32M38 18l-6 6 6 6"/>') },
+  { v: 'curl', b: 'Elbows bend', s: 'Hands curl up toward shoulders', i: ICON('<path d="M10 40l14-6 6-22"/><path d="M36 22a10 10 0 0 0-8-12"/><path d="M34 12l2 10-9 0" /> ') },
+  { v: 'legs', b: 'Legs do the work', s: 'Push, kick, curl, or squeeze with legs', i: ICON('<path d="M18 6v16l14 6v14M32 42h8"/><path d="M38 22l4 6"/>') },
+  { v: 'core', b: 'Your body bends', s: 'At the waist or the hips', i: ICON('<circle cx="34" cy="10" r="4" fill="currentColor" stroke="none"/><path d="M30 16L16 24 30 34v8M16 24h0"/>') },
+];
+
+// ---------- State and routing ----------
+const app = { pos: null, move: null, group: 'all', query: '', tab: 'identify' };
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const card = m => `<button class="mc" data-m="${m.id}">${art(m)}<b>${esc(m.name)}</b><span>${esc(m.muscles.join(', '))}</span></button>`;
+
+function matches() {
+  const scored = MACHINES.map(m => ({ m, s: (m.pos.includes(app.pos) ? 2 : 0) + (app.pos === 'cardio' || m.move.includes(app.move) ? 2 : 0) }));
+  return { best: scored.filter(x => x.s === 4).map(x => x.m), maybe: scored.filter(x => x.s === 2 && !x.m.cardio && app.pos !== 'cardio' && x.m.move.includes(app.move)).map(x => x.m) };
+}
+function renderIdentify() {
+  const v = $('#view-identify');
+  const opt = o => `<button class="opt${o.wide ? ' wide' : ''}" data-v="${o.v}">${o.i}${o.wide ? `<div><b>${esc(o.b)}</b><span>${esc(o.s)}</span></div>` : `<b>${esc(o.b)}</b><span>${esc(o.s)}</span>`}</button>`;
+  if (!app.pos) {
+    v.innerHTML = `<div class="q"><div class="step">Step 1 of 2</div><h2>How do you use the machine?</h2><p class="muted small">Look at it, or at someone using it.</p></div>
+      <div class="opts" data-q="pos">${Q_POS.map(opt).join('')}</div>
+      <div class="howto"><b>Almost every machine works the same way</b><ol><li>Adjust the seat or pads to your size.</li><li>Choose the weight by moving the pin in the weight stack.</li><li>Move slowly and with control, both ways.</li></ol></div>`;
+  } else if (!app.move && app.pos !== 'cardio') {
+    const p = Q_POS.find(o => o.v === app.pos);
+    v.innerHTML = `<div class="crumbs"><button class="crumb" data-reset="pos">${esc(p.b)} ✕</button></div>
+      <div class="q"><div class="step">Step 2 of 2</div><h2>What moves when you use it?</h2></div>
+      <div class="opts" data-q="move">${Q_MOVE.map(opt).join('')}</div>`;
+  } else {
+    const p = Q_POS.find(o => o.v === app.pos), mv = Q_MOVE.find(o => o.v === app.move);
+    const { best, maybe } = matches();
+    v.innerHTML = `<div class="crumbs"><button class="crumb" data-reset="pos">${esc(p.b)} ✕</button>${mv ? `<button class="crumb" data-reset="move">${esc(mv.b)} ✕</button>` : ''}</div>
+      <div class="q"><h2>${best.length ? 'Which one looks like yours?' : 'No exact match'}</h2><p class="muted small">Tap a picture to see its name and how to use it. Orange shows the part that moves.</p></div>
+      ${best.length ? `<div class="grid">${best.map(card).join('')}</div>` : ''}
+      ${maybe.length ? `<h2 class="sec">Could also be</h2><div class="grid">${maybe.map(card).join('')}</div>` : ''}
+      <button class="link" data-go="browse">Not here? See all machines →</button>`;
+  }
+}
+function renderBrowse() {
+  const v = $('#view-browse');
+  if (!v.dataset.ready) {
+    v.innerHTML = `<label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Search a name, nickname or muscle" autocomplete="off" enterkeyhint="search"></label>
+      <div class="chips" id="groups">${GROUPS.map(([k, n]) => `<button class="chip" data-g="${k}" aria-pressed="false">${n}</button>`).join('')}</div>
+      <div id="list"></div>`;
+    v.dataset.ready = 1;
+    $('#q').addEventListener('input', e => { app.query = e.target.value; renderList(); });
+  }
+  v.querySelectorAll('[data-g]').forEach(b => b.setAttribute('aria-pressed', b.dataset.g === app.group));
+  renderList();
+}
+function renderList() {
+  const q = app.query.trim().toLowerCase();
+  const list = MACHINES.filter(m => (app.group === 'all' || m.groups.includes(app.group))
+    && (!q || [m.name, ...m.aka, ...m.muscles, ...m.groups].join(' ').toLowerCase().includes(q)));
+  $('#list').innerHTML = list.length ? `<div class="grid">${list.map(card).join('')}</div>`
+    : `<p class="empty">Nothing matches “${esc(app.query)}”.<br>Try another word, or use <button class="link" data-go="identify">What's this?</button></p>`;
+}
+const SVG = {
+  spot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  setup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  steps: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
+  avoid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h0"/></svg>',
+  also: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  start: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
+};
+function renderMachine(id) {
+  const m = byId[id], v = $('#view-machine');
+  if (!m) { location.hash = '#browse'; return; }
+  const sect = (key, title, items, ordered, cls = '') => items && items.length ? `<section class="card sect ${cls}"><h3>${SVG[key]}${title}</h3><${ordered ? 'ol' : 'ul'}>${items.map(s => `<li>${esc(s)}</li>`).join('')}</${ordered ? 'ol' : 'ul'}></section>` : '';
+  v.innerHTML = `<article class="card hero">${art(m)}<div class="body">
+      <h2>${esc(m.name)}</h2>
+      ${m.aka.length ? `<p class="aka">Also called: ${esc(m.aka.join(' · '))}</p>` : ''}
+      <div class="tags">${m.muscles.map(x => `<span class="tag">${esc(x)}</span>`).join('')}</div>
+      <div class="legend"><span><i></i>The part you move</span>${m.view === 'front' ? '<span>Front view</span>' : '<span>Side view</span>'}</div>
+    </div></article>
+    <section class="card sect"><h3>${SVG.spot}How to recognise it</h3><p>${esc(m.spot)}</p></section>
+    ${sect('setup', 'Set it up', m.setup, true)}
+    ${sect('steps', 'How to do it', m.steps, true)}
+    ${sect('avoid', 'Avoid', m.avoid, false, 'warn')}
+    ${sect('also', 'You can also use it for', m.also, false)}
+    <section class="card sect start"><h3>${SVG.start}Beginner start</h3><p>${esc(m.start || START)}</p></section>
+    <p class="note">Stop if something hurts (sharp or joint pain, not muscle effort). Ask gym staff to show you the machine the first time.</p>`;
+}
+
+function show(view) {
+  for (const k of ['identify', 'browse', 'machine']) $('#view-' + k).hidden = k !== view;
+  const inMachine = view === 'machine';
+  $('#back').hidden = !inMachine;
+  document.querySelectorAll('.tab').forEach(t => t.toggleAttribute('aria-current', t.dataset.view === (inMachine ? app.tab : view)));
+  if (!inMachine) app.tab = view;
+}
+let cameFromApp = false;
+function route() {
+  const h = location.hash.slice(1);
+  if (h.startsWith('m/')) {
+    const m = byId[h.slice(2)];
+    renderMachine(h.slice(2)); show('machine'); $('#title').textContent = m ? m.name : 'Gym Guide'; window.scrollTo(0, 0);
+  } else {
+    const view = h === 'browse' ? 'browse' : 'identify';
+    view === 'browse' ? renderBrowse() : renderIdentify();
+    show(view); $('#title').textContent = view === 'browse' ? 'All machines' : 'What\'s this machine?';
+    window.scrollTo(0, scrollMemo[view] || 0);
+  }
+}
+const scrollMemo = {};
+function go(hash) { scrollMemo[app.tab] = window.scrollY; cameFromApp = true; location.hash = hash; }
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.m) return go('#m/' + t.dataset.m);
+  if (t.dataset.view) { if (t.dataset.view === app.tab && $('#view-machine').hidden && t.dataset.view === 'identify') { app.pos = app.move = null; renderIdentify(); } return go('#' + t.dataset.view); }
+  if (t.dataset.go) return go('#' + t.dataset.go);
+  if (t.id === 'back') { if (cameFromApp && history.length > 1) history.back(); else location.hash = '#' + app.tab; return; }
+  if (t.dataset.g) { app.group = t.dataset.g; return renderBrowse(); }
+  if (t.dataset.reset) { if (t.dataset.reset === 'pos') app.pos = null; app.move = null; renderIdentify(); return window.scrollTo(0, 0); }
+  const q = t.closest('[data-q]');
+  if (q) { app[q.dataset.q] = t.dataset.v; renderIdentify(); window.scrollTo(0, 0); }
+});
+window.addEventListener('hashchange', route);
+window.addEventListener('scroll', () => $('#top').classList.toggle('scrolled', window.scrollY > 4), { passive: true });
+route();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
+window.GG = { MACHINES, app };
+</script>
