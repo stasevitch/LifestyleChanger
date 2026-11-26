@@ -1,4 +1,4 @@
-// Walks the identify flow, browse/search and a machine page on an emulated iPhone; saves screenshots to the folder given.
+// Machine identifier: answers the questions, opens a machine, browses and searches the catalog on an emulated iPhone; saves screenshots to the folder given.
 // Usage: node test/e2e.js <out-dir> [light|dark]
 const { chromium, devices } = require('playwright');
 const http = require('http'), fs = require('fs'), path = require('path');
@@ -13,7 +13,7 @@ srv.listen(8766, async () => {
   const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => m.type() === 'error' && !/fonts/.test(m.text()) && errors.push(m.text()));
   const overflow = async () => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   const res = {};
-  await page.goto('http://localhost:8766/'); await page.waitForTimeout(500);
+  await page.goto('http://localhost:8766/#identify'); await page.waitForTimeout(500);
   await page.screenshot({ path: `${out}/1-step1.png`, fullPage: true });
   await page.click('[data-q=pos] [data-v=sit]');
   await page.screenshot({ path: `${out}/2-step2.png`, fullPage: true });
@@ -21,7 +21,7 @@ srv.listen(8766, async () => {
   res.sitPull = await page.$$eval('#view-identify .mc b', els => els.map(e => e.textContent));
   await page.screenshot({ path: `${out}/3-results.png`, fullPage: true });
   await page.click('#view-identify .mc');
-  res.title = await page.textContent('#title');
+  await page.waitForTimeout(150); res.title = await page.textContent('#title');
   await page.screenshot({ path: `${out}/4-machine.png`, fullPage: true });
   res.overflowMachine = await overflow();
   await page.click('#back'); await page.waitForTimeout(100);
@@ -33,7 +33,7 @@ srv.listen(8766, async () => {
     return out; });
   await page.click('[data-reset=pos]'); await page.click('[data-q=pos] [data-v=cardio]');
   res.cardio = await page.$$eval('#view-identify .mc b', els => els.map(e => e.textContent));
-  await page.click('.tab[data-view=browse]'); await page.waitForTimeout(100);
+  await page.click('.tab[data-view=machines]'); await page.waitForTimeout(100);
   res.all = await page.$$eval('#list .mc', els => els.length);
   await page.screenshot({ path: `${out}/5-browse.png`, fullPage: true });
   res.overflowBrowse = await overflow();
@@ -43,7 +43,7 @@ srv.listen(8766, async () => {
   // Direct link to a machine page
   await page.goto('http://localhost:8766/#m/smith-machine'); await page.waitForTimeout(300);
   res.directTitle = await page.textContent('#title');
-  await page.click('#back'); res.afterDirectBack = await page.textContent('#title');
+  await page.click('#back'); await page.waitForTimeout(150); res.afterDirectBack = await page.textContent('#title');
   console.log(JSON.stringify({ ...res, errors }, null, 1));
   await browser.close(); srv.close();
 });

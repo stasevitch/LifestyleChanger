@@ -1,23 +1,37 @@
 # Gym Guide
 
-For gym beginners who don't know what a machine is called or how to use it. Installable web app (PWA); no server, no account, works offline.
+A workout app for gym beginners: log every exercise and workout, watch your progress grow, and find out what a machine is called and how to use it. Installable web app (PWA) for iPhone and Android. No server and no account: data stays on the phone.
 
-## Step 1: what's this machine? (done)
-- **Identify by two questions**: how you use it (sitting, lying, standing, kneeling, cardio), then what moves (push, pull, squeeze, curl, legs, body bends). Matching machines are shown as pictures to compare with what's in front of you.
-- **All machines**: browse by muscle group (chest, back, shoulders, arms, legs, glutes, core, cardio) or search by name, nickname ("butterfly", "Gravitron") or muscle.
-- **Machine page**: drawing with the moving part in orange, other names, muscles, how to recognise it, set-up, how to do it, what to avoid, other uses, and a beginner starting point.
-- 24 machines: 20 strength machines and 4 cardio machines. The catalog is the `MACHINES` list in `src/app.html`; the drawings are built from small shape helpers in the same file.
+This is a standalone project. It is kept in this folder until it gets its own repository; the folder is laid out to be that repository's root.
 
-## Planned
-- Photo recognition: take a picture, get the matching machine page.
-- Beginner programs that link to these machine pages, and a workout log.
-- Russian translation, like BP Diary.
+## Features
+**Workout log**
+- Start a workout, add exercises, enter weight and reps, tick each set. A rest timer starts after each set (1–3 min or off; vibrates when it's over).
+- Each exercise shows what you did last time and fills in those numbers to start from.
+- Repeat your last workout, or any past one, in one tap.
+- A workout in progress survives closing the app.
+- Finish shows time, sets and weight lifted, and any new records (heaviest weight, best set, most reps, longest hold, longest or furthest cardio).
+- History by month; open any workout to edit it or delete it.
+
+**Progress**
+- This week, weeks in a row, all workouts and time trained.
+- Workouts per week and weight lifted per week for the last 12 weeks.
+- Every exercise with its change since the first session and a small trend line.
+- Each exercise page: records, a chart per workout (heaviest weight, total lifted or most reps; minutes or distance for cardio), and past sessions. For the assisted pull-up machine, less help weight counts as progress.
+
+**Exercises**
+- 24 machines with drawings and how-to guides, 15 free-weight and bodyweight exercises, plus your own (weight and reps, reps only, time held, or cardio).
+- "What's this machine?": answer 2 questions (how you use it, what moves) and match the drawing.
+- Browse by muscle or search by name, nickname ("butterfly", "Gravitron") or muscle.
+
+**Settings**: kg or lb (distances follow: km or miles), rest timer length, JSON backup export and import, delete all.
 
 ## Project layout
-- `src/app.html`: the whole app (markup, styles, script, machine catalog).
-- `public/`: manifest, service worker, icons (`make_icons.py` redraws them).
+- `src/app.html`: the whole app (markup, styles, script). The machine catalog is `MACHINES`, other exercises are `FREE`.
+- `public/`: manifest, service worker, icons (`make_icons.py` redraws them; a placeholder for now).
 - `build.py`: produces `dist/`.
-- `test/e2e.js`: Playwright walk-through on an emulated iPhone (`node test/e2e.js <screenshot-dir> [light|dark]`).
+- `test/e2e.js`: machine identifier walk-through. `test/tracker.js`: logs a workout on top of 8 weeks of seeded history and checks records, charts, editing, units and backup. Run either with `node test/<name>.js <screenshot-dir> [light|dark]`.
+- `.github/workflows/pages.yml`: deploys to GitHub Pages once this is its own repository.
 
 ## Build and run
 ```
@@ -25,4 +39,9 @@ python3 build.py
 python3 -m http.server -d dist 8000
 ```
 
-General guidance, not medical advice. Ask gym staff to show you a machine the first time.
+## Planned
+- Photo recognition of machines.
+- Beginner programs that fill a workout for you.
+- Russian translation.
+
+General guidance, not medical advice.
