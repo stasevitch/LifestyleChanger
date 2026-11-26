@@ -7,6 +7,7 @@ Tools that help people live healthier: track blood pressure, cut down on alcohol
 | `bp-diary/` | Blood pressure diary (installable web app) | Phase 1 done |
 | `habits/` | Alcohol and smoking tracking, streaks, milestones | Planned |
 | `facts/` | Researched fact library with sources (food, alcohol, smoking; US, China, Europe, Asia) | Planned |
+| `photo-scan` (later) | Read any monitor's screen from a photo, built and tested as its own project, then added to BP Diary once it's reliable. Earlier experiment kept in `bp-diary/tools/ocr-bench/` | Planned, not started |
 | `site/` | Landing page for the hosted site | |
 
 The site is built and published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`.
